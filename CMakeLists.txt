@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 2.8.0)
 # for finding GLog
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# find_package(GTest REQUIRED)
-# include_directories(${GTEST_INCLUDE_DIR})
-
 find_package(GLog REQUIRED)
 include_directories(${GLOG_INCLUDE_DIR})
 
@@ -32,42 +29,36 @@ include_directories("src")
 
 set(CPU_SRC 
     src/main.cc
-    src/parser.cc
-    src/raytracer.cc
+    src/ppm_reader.cc
     src/ppm_writer.cc
-    src/types.cc
-    src/mainwindow.cc
-    src/postprocessing.cc)
+    src/3d_window.cc
+    )
     
 #cpu version
-configure_file(src/raytracer.cu src/raytracer.cc COPYONLY)
-configure_file(src/postprocessing.cu src/postprocessing.cc COPYONLY)
-add_executable(rtcpu ${CPU_SRC})
-set_target_properties(rtcpu PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
-target_link_libraries(rtcpu ${GLOG_LIBRARY})
-target_link_libraries(rtcpu ${GFLAGS_LIBRARY})
-target_link_libraries(rtcpu ${YAMLCPP_LIBRARY})
-target_link_libraries(rtcpu ${GLUT_LIBRARY})
-target_link_libraries(rtcpu ${OPENGL_gl_LIBRARY})
+add_executable(swecpu ${CPU_SRC})
+set_target_properties(swecpu PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
+target_link_libraries(swecpu ${GLOG_LIBRARY})
+target_link_libraries(swecpu ${GFLAGS_LIBRARY})
+target_link_libraries(swecpu ${YAMLCPP_LIBRARY})
+target_link_libraries(swecpu ${GLUT_LIBRARY})
+target_link_libraries(swecpu ${OPENGL_gl_LIBRARY})
 
 set(GPU_SRC 
     src/main.cc
-    src/parser.cc
-    src/raytracer.cu
+    src/ppm_reader.cc
     src/ppm_writer.cc
-    src/types.cc
-    src/mainwindow.cc
-    src/postprocessing.cu)
+    src/3d_window.cc
+    )
 
 #cuda version
-cuda_add_executable(rtgpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v --maxrregcount 48 -arch=sm_12)
-set_target_properties(rtgpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
-set_target_properties(rtgpu PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(rtgpu ${GLOG_LIBRARY})
-target_link_libraries(rtgpu ${GFLAGS_LIBRARY})
-target_link_libraries(rtgpu ${YAMLCPP_LIBRARY})
-target_link_libraries(rtgpu ${GLUT_LIBRARY})
-target_link_libraries(rtgpu ${OPENGL_gl_LIBRARY})
+cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12)
+set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
+set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)
+target_link_libraries(swegpu ${GLOG_LIBRARY})
+target_link_libraries(swegpu ${GFLAGS_LIBRARY})
+target_link_libraries(swegpu ${YAMLCPP_LIBRARY})
+target_link_libraries(swegpu ${GLUT_LIBRARY})
+target_link_libraries(swegpu ${OPENGL_gl_LIBRARY})
 
 # common flags
 SET(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-long-long -Wno-variadic-macros")
