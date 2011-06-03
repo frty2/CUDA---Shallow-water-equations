@@ -1,5 +1,9 @@
 #pragma once
 
+#import "types.h"
+
 void initWaterSurface(int width, int height, float *&heights, velocity *velocities);
 
-float* computeNext(float time);
+void computeNext(float time);
+
+void destroyWaterSurface();
