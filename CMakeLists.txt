@@ -32,9 +32,11 @@ set(CPU_SRC
     src/ppm_reader.cc
     src/ppm_writer.cc
     src/3d_window.cc
+    src/wavesimulator.cc
     )
     
 #cpu version
+configure_file(src/wavesimulator.cu src/wavesimulator.cc COPYONLY)
 add_executable(swecpu ${CPU_SRC})
 set_target_properties(swecpu PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
 target_link_libraries(swecpu ${GLOG_LIBRARY})
@@ -48,6 +50,7 @@ set(GPU_SRC
     src/ppm_reader.cc
     src/ppm_writer.cc
     src/3d_window.cc
+    src/wavesimulator.cu
     )
 
 #cuda version
