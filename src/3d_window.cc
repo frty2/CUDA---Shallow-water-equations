@@ -10,8 +10,10 @@
 #if __APPLE__
     #include <GLUT/glut.h>
     #include <OpenGL/gl.h>
+    #include <OpenGL/glext.h>
 #else
     #include <GL/gl.h>
+    #include <OpenGL/glext.h>
     #include <GL/glut.h>
 #endif
 
