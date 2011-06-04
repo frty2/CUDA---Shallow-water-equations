@@ -5,169 +5,149 @@
 #include <cstring>
 
 int getDeviceCount()
-	{
-	int devCount;
+{
+    int devCount;
     cudaGetDeviceCount(&devCount);
-	return devCount;
-	}
+    return devCount;
+}
 
-cudaDeviceProp getDevProperties(const int& device)
-	{
-	cudaDeviceProp devProp;
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		cudaGetDeviceProperties(&devProp, device);
-		return devProp;
-		}
-	return devProp;
-	}
+cudaDeviceProp getDevProperties(int device)
+{
+    cudaDeviceProp devProp;
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaGetDeviceProperties(&devProp, device);
+        return devProp;
+    }
+    return devProp;
+}
 
-void kernelExecutionTimeout(bool& ket, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (ket != NULL)
-			ket = devProp.kernelExecTimeoutEnabled ? true : false;
-		}
-	}
+bool kernelExecutionTimeout(int device)
+{ 
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.kernelExecTimeoutEnabled;
+    }
+}
 
-void concurrentCopyAndExecution(bool& ccae, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (ccae != NULL)
-			ccae = devProp.kernelExecTimeoutEnabled ? true : false;
-		}
-	}
+bool concurrentCopyAndExecution(int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.kernelExecTimeoutEnabled;
+    }
+}
 
-void textureAlignment(unsigned int& textureAlign, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (textureAlign != NULL)
-			textureAlign = devProp.textureAlignment;
-		}
-	}
+unsigned int textureAlignment(int device)
+{
+    
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.textureAlignment;
+    }
+}
 
-void numberOfMultiprozessors(int& mp, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (mp != NULL)
-			mp = devProp.multiProcessorCount;
-		}
-	}
+int numberOfMultiprozessors(int device)
+{
+    
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.multiProcessorCount;
+    }
+}
 
-void clockRate(int& clock, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (clock != NULL)
-			clock = devProp.clockRate;
-		}
-	}
+int clockRate(int clock, int device)
+{ 
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return clock = devProp.clockRate;
+    }
+}
 
-void maxThreadsPerBlock(int& threads, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (threads != NULL)
-			threads = devProp.maxThreadsPerBlock;
-		}
-	}
-	
-void maxDimBlock(int& threadsx, int& threadsy, int& threadsz, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (threadsx != NULL)
-			threadsx = devProp.maxThreadsDim[0];
-		if (threadsy != NULL)
-			threadsy = devProp.maxThreadsDim[1];
-		if (threadsz != NULL)
-			threadsz = devProp.maxThreadsDim[2];
-		}
-	}
-	
-void maxDimGrid(int& blocksx, int& blocksy, int& blocksz, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (blocksx != NULL)
-			blocksx = devProp.maxGridSize[0];
-		if (blocksy != NULL)
-			blocksy = devProp.maxGridSize[1];
-		if (blocksz != NULL)
-			blocksz = devProp.maxGridSize[2];
-		}
-	}
+int maxThreadsPerBlock(int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.maxThreadsPerBlock;
+    }
+}
 
-void maxMemoryPitch(unsigned int& memoryPitch, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (memoryPitch != NULL)
-			memoryPitch = devProp.memPitch;
-		}
-	}
+void maxDimBlock(int& threadsx, int& threadsy, int& threadsz, int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        threadsx = devProp.maxThreadsDim[0];
+        threadsy = devProp.maxThreadsDim[1];
+        threadsz = devProp.maxThreadsDim[2];
+    }
+}
 
-void getWarpSize(int& warpS, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (warpS != NULL)
-			warpS = devProp.warpSize;
-		}
-	}
+void maxDimGrid(int& blocksx, int& blocksy, int& blocksz, int device)
+{
+    
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        blocksx = devProp.maxGridSize[0];
+        blocksy = devProp.maxGridSize[1];
+        blocksz = devProp.maxGridSize[2];
+    }
+}
 
-void getMemory(	unsigned int& globalMemory, unsigned int& sharedMemory, 
-				unsigned int& constMemory, int& registerPerBlock, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (globalMemory != NULL)
-			globalMemory = devProp.totalGlobalMem;
-		if (sharedMemory != NULL)
-			sharedMemory = devProp.sharedMemPerBlock;
-		if (constMemory != NULL)
-			constMemory = devProp.totalConstMem;
-		if (registerPerBlock != NULL)
-			registerPerBlock = devProp.regsPerBlock;
-		}
-	}
+unsigned int maxMemoryPitch(int device)
+{
+    
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.memPitch;
+    }
+}
 
-void getName(std::string& stream, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		stream << devProp.name.c_str();
-		}
-	}
+int getWarpSize(int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.warpSize;
+    }
+}
 
-void getRevisionNumber(int& major, int& minor, const int& device)
-	{
-	cudaDeviceProp devProp = getDevProperties(device);
-	if (getDeviceCount() > device && device >= 0 )
-		{
-		if (major != NULL)
-			major = devProp.major;
-		if (minor != NULL)
-			minor = devProp.minor;
-		}
-	}
+void getMemory( unsigned int& globalMemory, unsigned int& sharedMemory,
+                unsigned int& constMemory, int& registerPerBlock, int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        globalMemory = devProp.totalGlobalMem;
+        sharedMemory = devProp.sharedMemPerBlock;
+        constMemory = devProp.totalConstMem;
+        registerPerBlock = devProp.regsPerBlock;
+    }
+}
 
+std::string getName(int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        return devProp.name;
+    }
+}
 
-	
-	
+void getRevisionNumber(int& major, int& minor, int device)
+{
+    if (getDeviceCount() > device && device >= 0 )
+    {
+        cudaDeviceProp devProp = getDevProperties(device);
+        major = devProp.major;
+        minor = devProp.minor;
+    }
+}
