@@ -1,5 +1,6 @@
 #include "ppm_reader.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -46,5 +47,5 @@ void readPPM(const char* filename, rgb *&image, int& width, int& height)
         image[i].w = 0;
         i++;
     }
-    CHECK_EQ(height * width, i);
+    CHECK_EQ((unsigned int)height * width, i);
 }
