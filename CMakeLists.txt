@@ -45,7 +45,7 @@ target_link_libraries(swecpu ${GLOG_LIBRARY})
 target_link_libraries(swecpu ${GFLAGS_LIBRARY})
 target_link_libraries(swecpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swecpu ${GLUT_LIBRARY})
-target_link_libraries(swecpu ${OPENGL_gl_LIBRARY})
+target_link_libraries(swecpu ${OPENGL_LIBRARIES})
 
 
 set(GPU_SRC 
@@ -66,7 +66,7 @@ target_link_libraries(swegpu ${GLOG_LIBRARY})
 target_link_libraries(swegpu ${GFLAGS_LIBRARY})
 target_link_libraries(swegpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swegpu ${GLUT_LIBRARY})
-target_link_libraries(swegpu ${OPENGL_gl_LIBRARY})
+target_link_libraries(swegpu ${OPENGL_LIBRARIES})
 
 # common flags
 SET(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-long-long -Wno-variadic-macros")

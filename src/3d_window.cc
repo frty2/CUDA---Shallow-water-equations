@@ -12,7 +12,7 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #else
-#include <GL/glew.h>
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <GL/glext.h>
