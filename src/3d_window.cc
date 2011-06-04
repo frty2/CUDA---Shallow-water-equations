@@ -13,7 +13,7 @@
     #include <OpenGL/glext.h>
 #else
     #include <GL/gl.h>
-    #include <OpenGL/glext.h>
+    #include <GL/glext.h>
     #include <GL/glut.h>
 #endif
 
