@@ -1,6 +1,7 @@
 #include <iostream>
 #include <glog/logging.h>
 
+#include "stdlib.h"
 #include "types.h"
 #include "ppm_reader.h"
 #include "3d_window.h"
