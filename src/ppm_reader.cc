@@ -6,8 +6,11 @@
 #include <glog/logging.h>
 
 #include "types.h"
+#include "stdlib.h"
 
 /*
+ * Only temporary file, need a 32 bit format with alpha channel
+ *
  * https://gitorious.org/cudafsu/texture_memory/blobs/master/texture.cu
  */
 
