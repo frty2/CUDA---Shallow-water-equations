@@ -33,6 +33,7 @@ set(CPU_SRC
     src/ppm_writer.cc
     src/3d_window.cc
     src/wavesimulator.cc
+	src/timing.cc
     )
     
 #cpu version
@@ -51,6 +52,8 @@ set(GPU_SRC
     src/ppm_writer.cc
     src/3d_window.cc
     src/wavesimulator.cu
+	src/cudaInfo.cu
+	src/timing.cc
     )
 
 #cuda version

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <glog/logging.h>
-
+#include <stdio.h>
 #include "stdlib.h"
 #include "types.h"
 #include "ppm_reader.h"
