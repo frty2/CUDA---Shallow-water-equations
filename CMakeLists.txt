@@ -21,8 +21,6 @@ include_directories(${GLUT_INCLUDE_DIRS})
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIRS})
 
-find_package(GLEW)
-include_directories(${GLEW_INCLUDE_DIRS})
 
 IF(APPLE)
     include_directories(/System/Library/Frameworks)
@@ -49,9 +47,6 @@ target_link_libraries(swecpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swecpu ${GLUT_LIBRARY})
 target_link_libraries(swecpu ${OPENGL_gl_LIBRARY})
 
-IF(GLEWFOUND)
-    target_link_libraries(swecpu ${GLEW_LIBRARY})
-ENDIF(GLEWFOUND)
 
 set(GPU_SRC 
     src/main.cc
@@ -72,9 +67,6 @@ target_link_libraries(swegpu ${GFLAGS_LIBRARY})
 target_link_libraries(swegpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swegpu ${GLUT_LIBRARY})
 target_link_libraries(swegpu ${OPENGL_gl_LIBRARY})
-IF(GLEWFOUND)
-    target_link_libraries(swegpu ${GLEW_LIBRARY})
-ENDIF(GLEWFOUND)
 
 # common flags
 SET(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-long-long -Wno-variadic-macros")
