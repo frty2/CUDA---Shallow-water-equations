@@ -1,6 +1,8 @@
 #include "wavesimulator.h"
 
-#include "glog/logging.h"
+#include <glog/logging.h>
+
+#include "types.h"
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
@@ -11,9 +13,11 @@ vertex* device_heightmap;
 vertex* device_watersurfacevertices;
 rgb* device_watersurfacecolors;
 
+int f;
+
 
 int state = UNINTIALISED;
-
+/*
 __host__ __device__ float3 U(float h, velocity v)
 {
     float3 U;
@@ -40,32 +44,33 @@ __host__ __device__ float3 G(float h, velocity v)
     G.z = (v.y * v.y * h) + ((1 / 2) * GRAVITY * h * h);
     return G;
 }
-
-__global__ simulateWaveStep(gridpoint* device_grid, vertex* device_heightmap, 
+*/
+#if __GPUVERSION__
+__global__ void simulateWaveStep(int frame, gridpoint* device_grid, vertex* device_heightmap, 
                             vertex* device_watersurfacevertices, rgb* device_watersurfacecolors, 
                             int width, int height)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x;
-	int y = threadIdx.y + blockIdx.y * blockDim.y;
-	int gridx = x + 1;
-	int gridy = y + 1;
-	
-	if(x < width && y < height)
-	{
-	   vertex v;
-	   v.x = x;
-	   v.z = y;
-	   v.y = 3.0f;
-	   device_watersurfacevertices[y*width+x] = v;
-	   
-	   rgb c;
-	   c.x = 255;
-	   c.y = 0;
-	   c.z = 0;
-	   device_watersurfacecolors[y*width+x] = c;
+    int x = threadIdx.x + blockIdx.x * blockDim.x;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
+    int gridx = x + 1;
+    int gridy = y + 1;
+    
+    if(x < width && y < height)
+    {
+       vertex v;
+       v.x = x/float(width)*16-8;
+       v.z = y/float(height)*16-8;
+       v.y = 0.05 * sin(frame / 10.0f + v.x * 20 - 5 * v.z) + 0.9;
+       device_watersurfacevertices[y*width+x] = v;
+       
+       rgb c;
+       c.x = 100 + 50 * (v.y - 0.9) * 20;
+       c.y = 150 + 50 * (v.y - 0.9) * 20;
+       c.z = 255;
+       device_watersurfacecolors[y * width + x] = c;
 	}
 }
-
+#endif
 void initWaterSurface(int width, int height, vertex* heightmapvertices)
 {
 
@@ -108,6 +113,8 @@ void computeNext(float time, int width, int height, vertex* watersurfacevertices
     {
         return;
     }
+    #if __GPUVERSION__
+    cudaError_t error;
     
      // make dimension
     int x = (width + 16 - 1) / 16;
@@ -116,7 +123,7 @@ void computeNext(float time, int width, int height, vertex* watersurfacevertices
     dim3 blocksPerGrid(x, y);
     
     //gitter 1 zeitschritt
-    simulateWaveStep<<<blocksPerGrid, threadsPerBlock>>>(device_grid, device_heightmap, device_watersurfacevertices, 
+    simulateWaveStep<<<blocksPerGrid, threadsPerBlock>>>(f++ ,device_grid, device_heightmap, device_watersurfacevertices, 
                      device_watersurfacecolors, width, height);
     
     error = cudaGetLastError();
@@ -129,6 +136,7 @@ void computeNext(float time, int width, int height, vertex* watersurfacevertices
     // copy back data
     cudaMemcpy(watersurfacevertices, device_watersurfacevertices, width*height*sizeof(vertex), cudaMemcpyDeviceToHost);
     cudaMemcpy(watersurfacecolors, device_watersurfacecolors, width*height*sizeof(rgb), cudaMemcpyDeviceToHost);
+    #endif
 }
 
 void destroyWaterSurface()

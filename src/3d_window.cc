@@ -18,6 +18,7 @@
 #include <GL/glext.h>
 #endif
 
+#include "wavesimulator.h"
 #include "types.h"
 #include "math.h"
 
@@ -150,34 +151,14 @@ void updateScene()
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
     vertex *watersurfacevertices = (vertex *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacevertices);
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            vertex &v = watersurfacevertices[y * width + x];
-            v.y = 0.05 * sin(frame / 10.0f + v.x * 20 - 5 * v.z) + 0.9;
-        }
-    }
     glUnmapBuffer(GL_ARRAY_BUFFER);
     
-    
-
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacecolors);
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            rgb v;
-            v.x = 100 + 50 * (watersurfacevertices[y * width + x].y - 1.2) * 20;
-            v.y = 150 + 50 * (watersurfacevertices[y * width + x].y - 1.2) * 20;
-            v.z = 255;
-
-            watersurfacecolors[y * width + x] = v;
-        }
-    }
     glUnmapBuffer(GL_ARRAY_BUFFER);
+    
+    computeNext(0, width, height, watersurfacevertices, watersurfacecolors);
 }
 
 void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
@@ -270,6 +251,11 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
     glGenBuffers(1, &indexbufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
+    
+    /*
+     * TEMP
+     */
+    initWaterSurface(width, height, vertices);
 
     free(vertices);
     free(indices);
