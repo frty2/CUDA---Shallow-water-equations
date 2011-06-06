@@ -93,7 +93,7 @@ void startWaveSimulator(int width, int height, vertex* vert, velocity* velo, rgb
 
     // malloc space for image
     sizeInBytes = height * width * sizeof(rgb);
-    
+
     error = cudaMalloc(&imageDevPointer, sizeInBytes);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     CHECK_NOTNULL(imageDevPointer);

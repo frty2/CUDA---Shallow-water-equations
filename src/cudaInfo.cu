@@ -23,7 +23,7 @@ cudaDeviceProp getDevProperties(int device)
 }
 
 bool kernelExecutionTimeout(int device)
-{ 
+{
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);
@@ -42,7 +42,7 @@ bool concurrentCopyAndExecution(int device)
 
 unsigned int textureAlignment(int device)
 {
-    
+
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);
@@ -52,7 +52,7 @@ unsigned int textureAlignment(int device)
 
 int numberOfMultiprozessors(int device)
 {
-    
+
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);
@@ -61,7 +61,7 @@ int numberOfMultiprozessors(int device)
 }
 
 int clockRate(int clock, int device)
-{ 
+{
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);
@@ -91,7 +91,7 @@ void maxDimBlock(int& threadsx, int& threadsy, int& threadsz, int device)
 
 void maxDimGrid(int& blocksx, int& blocksy, int& blocksz, int device)
 {
-    
+
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);
@@ -103,7 +103,7 @@ void maxDimGrid(int& blocksx, int& blocksy, int& blocksz, int device)
 
 unsigned int maxMemoryPitch(int device)
 {
-    
+
     if (getDeviceCount() > device && device >= 0 )
     {
         cudaDeviceProp devProp = getDevProperties(device);

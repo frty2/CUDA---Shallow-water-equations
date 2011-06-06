@@ -25,7 +25,7 @@ unsigned int maxMemoryPitch(int device);
 int getWarpSize(int device);
 
 void getMemory( unsigned int& globalMemory, unsigned int& sharedMemory,
-    unsigned int& constMemory, int& registerPerBlock, int device);
+                unsigned int& constMemory, int& registerPerBlock, int device);
 
 std::string getName(int device);
 
