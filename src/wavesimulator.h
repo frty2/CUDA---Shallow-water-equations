@@ -2,8 +2,8 @@
 
 #include "types.h"
 
-void initWaterSurface(int width, int height, float *&heights, velocity *velocities);
+void initWaterSurface(int width, int height, vertex* heightmapvertices);
 
-void computeNext(float time);
+void computeNext(float time, int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors);
 
 void destroyWaterSurface();

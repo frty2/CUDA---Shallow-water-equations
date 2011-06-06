@@ -159,6 +159,8 @@ void updateScene()
         }
     }
     glUnmapBuffer(GL_ARRAY_BUFFER);
+    
+    
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -357,7 +359,7 @@ void initGlut(int argc, char ** argv)
     glutDisplayFunc(paint);
     glutKeyboardFunc(keypressed);
     glutReshapeFunc(resize);
-    glutTimerFunc(50, animate, 0);
+    glutTimerFunc(0, animate, 0);
 }
 
 void drawString(int x, int y, const std::string &text, void *font)
@@ -386,24 +388,24 @@ void drawBorder()
     glColor3f(1.0f, 1.0f, 1.0f);
     
     glBegin(GL_QUADS);
-    glVertex3f(-8.0f, 0.5f, -8.0f);
+    glVertex3f(-8.0f, 0.0f, -8.0f);
     glVertex3f(-8.0f, 2.0f, -8.0f);
     glVertex3f(8.0f, 2.0f, -8.0f);
-    glVertex3f(8.0f, 0.5f, -8.0f);
+    glVertex3f(8.0f, 0.0f, -8.0f);
 
-    glVertex3f(-8.0f, 0.5f, -8.0f);
+    glVertex3f(-8.0f, 0.0f, -8.0f);
     glVertex3f(-8.0f, 2.0f, -8.0f);
     glVertex3f(-8.0f, 2.0f, 8.0f);
-    glVertex3f(-8.0f, 0.5f, 8.0f);
+    glVertex3f(-8.0f, 0.0f, 8.0f);
 
-    glVertex3f(8.0f, 0.5f, 8.0f);
+    glVertex3f(8.0f, 0.0f, 8.0f);
     glVertex3f(8.0f, 2.0f, 8.0f);
     glVertex3f(8.0f, 2.0f, -8.0f);
-    glVertex3f(8.0f, 0.5f, -8.0f);
+    glVertex3f(8.0f, 0.0f, -8.0f);
 
-    glVertex3f(8.0f, 0.5f, 8.0f);
+    glVertex3f(8.0f, 0.0f, 8.0f);
     glVertex3f(8.0f, 2.0f, 8.0f);
     glVertex3f(-8.0f, 2.0f, 8.0f);
-    glVertex3f(-8.0f, 0.5f, 8.0f);
+    glVertex3f(-8.0f, 0.0f, 8.0f);
     glEnd();
 }

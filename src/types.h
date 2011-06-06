@@ -4,11 +4,11 @@
 
 typedef uchar4 rgb;
 
-typedef float3 vertex;
+typedef float3 vertex; // x, h, z
 
-typedef float2 velocity;
+typedef float3 gridpoint; //u, v, h
 
-__device__ float3 operator +(const float3& x, const float3& y);
-__device__ float3 operator -(const float3& x, const float3& y);
-__device__ float3 operator *(const float3& x, const float& c);
-__device__ float3 operator *(const float& c, const float3& x);
+__host__ __device__ float3 operator +(const float3& x, const float3& y);
+__host__ __device__ float3 operator -(const float3& x, const float3& y);
+__host__ __device__ float3 operator *(const float3& x, const float& c);
+__host__ __device__ float3 operator *(const float& c, const float3& x);
