@@ -4,7 +4,7 @@
 
 #include "types.h"
 
-const float GRAVITY = 9.8f;
+const float GRAVITY = 0.0001f;
 const float dt = 0.01f;
 const float dx = 1.0f;
 const float dy = 1.0f;
@@ -23,27 +23,27 @@ int f;
 
 int state = UNINTIALISED;
 
-__host__ __device__ float3 U(gridpoint gp)
+__host__ __device__ gridpoint U(gridpoint gp)
 {
-    float3 U;
+    gridpoint U;
     U.x = gp.y;
     U.y = gp.x * gp.y;
     U.z = gp.z * gp.y;
     return U;
 }
 
-__host__ __device__ float3 F(gridpoint gp)
+__host__ __device__ gridpoint F(gridpoint gp)
 {
-    float3 F;
+    gridpoint F;
     F.x = gp.x * gp.y;
     F.y = (gp.x * gp.x * gp.y) + (0.5f * GRAVITY * gp.y * gp.y);
     F.z = gp.x * gp.z * gp.y;
     return F;
 }
 
-__host__ __device__ float3 G(gridpoint gp)
+__host__ __device__ gridpoint G(gridpoint gp)
 {
-    float3 G;
+    gridpoint G;
     G.x = gp.z * gp.y;
     G.y = gp.x * gp.z * gp.y;
     G.z = (gp.z * gp.z * gp.y) + (0.5f * GRAVITY * gp.y * gp.y);
@@ -60,6 +60,36 @@ __host__ __device__ gridpoint reverseU(gridpoint point)
 } 
 
 
+__host__ __device__ gridpoint operator +(const gridpoint& x, const gridpoint& y)
+{
+    gridpoint z;
+    z.x = x.x + y.x;
+    z.y = x.y + y.y;
+    z.z = x.z + y.z;
+    return z;
+}
+__host__ __device__ gridpoint operator -(const gridpoint& x, const gridpoint& y)
+{
+    gridpoint z;
+    z.x = x.x - y.x;
+    z.y = x.y - y.y;
+    z.z = x.z - y.z;
+    return z;
+}
+__host__ __device__ gridpoint operator *(const gridpoint& x, const float& c)
+{
+    gridpoint z;
+    z.x = c * x.x;
+    z.y = c * x.y;
+    z.z = c * x.z;
+    return z;
+}
+__host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
+{
+    return x * c;
+}
+
+
 
 #if __GPUVERSION__
 __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* device_grid_next, vertex* device_heightmap, 
@@ -71,60 +101,64 @@ __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* d
     int gridx = x + 1;
     int gridy = y + 1;
     
+    int gridwidth = width+2;
     if(x < width && y < height)
     {
-        gridpoint north = device_grid[gridx+(gridy-1)*width];
-        gridpoint west = device_grid[gridx-1+(gridy)*width];
-        gridpoint south = device_grid[gridx+(gridy+ 1)*width];
-        gridpoint east = device_grid[gridx+1+(gridy)*width];
-        gridpoint center = device_grid[gridx+(gridy)*width];
+        gridpoint center = device_grid[gridx+gridy*gridwidth];
         
-        gridpoint u_south = 0.5f*(U(south) + U(center) - 0.5f*dt/dy*( G(south)-G(center) );
-        gridpoint u_west = 0.5f*(U(west) + U(center) - 0.5f*dt/dx*( F(west)-F(center) );
-        gridpoint u_north = 0.5f*(U(north) + U(center) - 0.5f*dt/dy*( G(north)-G(center) );
-        gridpoint u_east = 0.5f*(U(east) + U(center) - 0.5f*dt/dx*( F(east)-F(center) );
+        
+        gridpoint north = device_grid[gridx+(gridy-1)*gridwidth];
+        gridpoint west = device_grid[gridx-1+gridy*gridwidth];
+        gridpoint south = device_grid[gridx+(gridy+1)*gridwidth];
+        gridpoint east = device_grid[gridx+1+gridy*gridwidth];
+        
+        
+        gridpoint u_south = 0.5f*( U(south) + U(center) ) - dt/(2*dy) *( G(south)-G(center) );
+        gridpoint u_north = 0.5f*( U(north) + U(center) ) - dt/(2*dy) *( G(north)-G(center) );
+        gridpoint u_west = 0.5f*( U(west) + U(center) ) - dt/(2*dx) *( F(west)-F(center) );
+        gridpoint u_east = 0.5f*( U(east) + U(center) ) - dt/(2*dx) *( F(east)-F(center) );
         
         gridpoint n_east = reverseU(u_east);      
         gridpoint n_south = reverseU(u_south);
         gridpoint n_north = reverseU(u_north);
         gridpoint n_west = reverseU(u_west);
         
-        gridpoint u_new_point = center - dt/dx*(F(n_east)-F(n_west)) - dt/dy * (G(n_south) - G(n_north))
-        gridpoint new_point = reverseU(u_new_point);
+        gridpoint u_center = U(center) -  dt/dx * ( F(n_east)-F(n_west) ) - dt/dy * ( G(n_south) - G(n_north) );
         
-        device_grid_next[gridx+(gridy)*width] = new_point;
+        gridpoint n_center = reverseU(u_center);
         
-        vertex new_vertex;
-        new_vertex.x = x/float(width)*16-8;
-        new_vertex.z = y/float(height)*16-8;
-        new_vertex.y = new_point.y;
-        device_watersurfacevertices[x+y*width] = new_vertex;
+        device_grid_next[gridx+gridy*gridwidth] = n_center;
+        
+        vertex v;
+        v.x = x/float(width)*16.0f-8.0f;
+        v.z = y/float(height)*16.0f-8.0f;
+        v.y = n_center.y;
+        device_watersurfacevertices[x+y*width] = v;
        
         rgb c;
-        c.x = 100 + 50 * (v.y - 0.9) * 20;
-        c.y = 150 + 50 * (v.y - 0.9) * 20;
+        c.x = 50+(v.y-1.0f)*100;
+        c.y = 100+(v.y-1.0f)*100;
         c.z = 255;
         device_watersurfacecolors[y * width + x] = c;
 	}
 }
 
-__global__ void initWaterSurface(vertex* device_watersurfacevertices, int width, int height)
+__global__ void initWaterSurface(gridpoint *device_grid, int width, int height)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     
     if(x < width && y < height)
     {
-        vertex new_vertex;
-        new_vertex.x = 0.0f;
-        new_vertex.y = 1.0f;
-        new_vertex.z = 0.0f;
-        device_watersurfacevertices[x+y*width] = new_vertex;
-        
-        if(x > 120 && x < 130 && y > 120 && y < 130)
+        gridpoint gp;
+        gp.x = 0.0f;
+        gp.y = 1.0f;
+        gp.z = 0.0f;
+        if(x > 50 && x < 100 && y <= 200 && y >= 90)
         {
-            new_vertex.y = 2.0f;
+            gp.y = 1.5f;
         }
+        device_grid[x+y*width] = gp;
     }
 }
 #endif
@@ -144,12 +178,11 @@ void initWaterSurface(int width, int height, vertex* heightmapvertices)
     error = cudaMalloc(&device_grid, sizeInBytes);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     
+    
     // malloc memory for device_grid_next
     error = cudaMalloc(&device_grid_next, sizeInBytes);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     
-    error = cudaMemset(device_grid, 0 , sizeInBytes);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     
     // copy heightmapdata data to device
     sizeInBytes = height * width * sizeof(vertex);
@@ -166,12 +199,18 @@ void initWaterSurface(int width, int height, vertex* heightmapvertices)
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     
      // make dimension
-    int x = (width + 16 - 1) / 16;
-    int y = (height + 16 - 1) / 16;
+    int x = (width + 18 - 1) / 16;
+    int y = (height + 18 - 1) / 16;
     dim3 threadsPerBlock(16, 16);
     dim3 blocksPerGrid(x, y);
     
-    initWaterSurface<<<blocksPerGrid, threadsPerBlock>>>(device_watersurfacevertices, width, height);
+    initWaterSurface<<<blocksPerGrid, threadsPerBlock>>>(device_grid, width + 2, height + 2);
+    error = cudaGetLastError();
+    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
+    error = cudaThreadSynchronize();
+    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
+    
+    initWaterSurface<<<blocksPerGrid, threadsPerBlock>>>(device_grid_next, width + 2, height + 2);
     error = cudaGetLastError();
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     error = cudaThreadSynchronize();
@@ -188,6 +227,7 @@ void computeNext(float time, int width, int height, vertex* watersurfacevertices
         return;
     }
     #if __GPUVERSION__
+    
     cudaError_t error;
     
      // make dimension
@@ -211,7 +251,7 @@ void computeNext(float time, int width, int height, vertex* watersurfacevertices
     cudaMemcpy(watersurfacevertices, device_watersurfacevertices, width*height*sizeof(vertex), cudaMemcpyDeviceToHost);
     cudaMemcpy(watersurfacecolors, device_watersurfacecolors, width*height*sizeof(rgb), cudaMemcpyDeviceToHost);
     
-    grindpoint *grid_helper = device_grid;
+    gridpoint *grid_helper = device_grid;
     device_grid = device_grid_next;
     device_grid_next = grid_helper;
     #endif

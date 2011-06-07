@@ -33,6 +33,7 @@ set(CPU_SRC
     src/ppm_reader.cc
     src/ppm_writer.cc
     src/3d_window.cc
+    src/timing.cc
     src/wavesimulator.cc
     )
     
@@ -52,6 +53,7 @@ set(GPU_SRC
     src/ppm_reader.cc
     src/ppm_writer.cc
     src/3d_window.cc
+    src/timing.cc
     src/wavesimulator.cu
     src/cudaInfo.cu
     )

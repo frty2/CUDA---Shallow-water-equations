@@ -124,7 +124,7 @@ void paint()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glIndexPointer(GL_INT, 0, 0);
 
-    glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    //glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
@@ -138,7 +138,7 @@ void paint()
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_INDEX_ARRAY);
 
-    drawBorder();
+    //drawBorder();
 
     glPopMatrix();
 
@@ -199,37 +199,11 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
         }
     }
 
-    //Calc the inital vertices for water surface
     vertex *watervertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(watervertices);
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            vertex v;
-            v.x = x * 16.0f / width - 8;
-            v.z = y * 16.0f / height - 8;
-            v.y = 0.05 * sin(v.x * 20 - 5 * v.z) + 0.9;
 
-            watervertices[y * width + x] = v;
-        }
-    }
-
-    //Calc color fot the watersurface
     rgb* watercolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watercolors);
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            rgb v;
-            v.x = 100 + 50 * (watervertices[y * width + x].y - 1.2) * 20;
-            v.y = 150 + 50 * (watervertices[y * width + x].y - 1.2) * 20;
-            v.z = 255;
-
-            watercolors[y * width + x] = v;
-        }
-    }
 
 
     glGenBuffers(2, &heightmap[0]);

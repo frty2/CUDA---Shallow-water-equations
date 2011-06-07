@@ -20,7 +20,7 @@ int main(int argc, char ** argv)
     readPPM("../res/texture.ppm", color_img, img_width, img_height);
 
 
-    createWindow(argc, argv, 800, 600, NULL, img_width, img_height, heightmap_img, color_img);
+    createWindow(argc, argv, 800, 600, NULL, 512, 512, heightmap_img, color_img);
 
     free(heightmap_img);
     free(color_img);
