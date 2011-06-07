@@ -1,23 +1,39 @@
-#include <glog/logging.h>
-#include <sys/time.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "timing.h"
 
-double getTime()
+#include <sys/time.h>
+
+ // in milliseconds
+long inittime;
+long marktime;
+
+long getTime()
 {
-    timeval start;
-    gettimeofday(&start, 0);
-    double tS = start.tv_sec * 1000000 + (start.tv_usec);
-    return tS;
+    timeval timestamp;
+    gettimeofday(&timestamp, 0);
+    return timestamp.tv_sec * 1000000 + timestamp.tv_usec;
 }
-void getDif(double& tS, int& sec, int& millisec)
+
+void initTimer()
 {
-    //if (tS != NULL && sec != NULL && millisec != NULL)
-    //  {
-    timeval end;
-    double tE = end.tv_sec * 1000000  + (end.tv_usec);
-    long diff = long(tE - tS);
-    sec = (int)diff / 1000000;
-    millisec = (int)(diff % 1000000) / 1000;
-    //  }
+    inittime = getTime();
 }
+
+void markTime()
+{
+    marktime = getTime();
+}
+
+long timeSinceMark()
+{
+    long currenttime = getTime();
+    return currenttime - marktime;
+}
+
+long timeSinceInit()
+{
+    long currenttime = getTime();
+    return currenttime - inittime;
+}
+
+
+

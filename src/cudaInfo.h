@@ -1,8 +1,10 @@
 #pragma once
 
-int getDeviceCount();
+#include <string>
 
-cudaDeviceProp getDevProperties(int device);
+int initCudaInfo();
+
+void destroyCudaInfo();
 
 bool kernelExecutionTimeout(int device);
 
@@ -12,21 +14,30 @@ unsigned int textureAlignment(int device);
 
 int numberOfMultiprozessors(int device);
 
-int clockRate(int clock, int device);
+int clockRate(int device);
 
 int maxThreadsPerBlock(int device);
 
-void maxDimBlock(int& threadsx, int& threadsy, int& threadsz, int device);
+int maxBlocksizeX(int device);
 
-void maxDimGrid(int& blocksx, int& blocksy, int& blocksz, int device);
+int maxBlocksizeY(int device);
+
+int maxBlocksizeZ(int device);
+
+int maxGridsizeX(int device);
+
+int maxGridsizeY(int device);
+
+int maxGridsizeZ(int device);
 
 unsigned int maxMemoryPitch(int device);
 
 int getWarpSize(int device);
 
-void getMemory( unsigned int& globalMemory, unsigned int& sharedMemory,
-                unsigned int& constMemory, int& registerPerBlock, int device);
+unsigned int getTotalGlobalMemory( unsigned int& globalMemory, unsigned int& sharedMemory, int device);
+
+unsigned int getSharedMemory( unsigned int& globalMemory, unsigned int& sharedMemory, int device);
 
 std::string getName(int device);
 
-void getRevisionNumber(int& major, int& minor, int device);
+float getRevisionNumber(int& major, int& minor, int device);

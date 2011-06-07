@@ -1,9 +1,11 @@
+#include "cudaInfo.h"
+
 #include <glog/logging.h>
-#include "types.h"
 #include <stdio.h>
 #include <string>
-#include <cstring>
 #include <stdlib.h>
+
+#include "types.h"
 
 cudaDeviceProp *devprops = NULL;
 
@@ -26,6 +28,15 @@ int initCudaInfo()
     }
     
     return devicecount;
+}
+
+void destroyCudaInfo()
+{
+    if(devprops != NULL)
+    {
+        free(devprops);
+        devprops = NULL;
+    }
 }
 
 bool kernelExecutionTimeout(int device)

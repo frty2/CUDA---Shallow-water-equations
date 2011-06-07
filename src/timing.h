@@ -1,4 +1,8 @@
 #pragma once
 
-double getTime();
-void getDif(double& tS, int& sec, int& millisec);
+void initTimer();
+
+void markTime();
+long timeSinceMark();
+long timeSinceInit();
+
