@@ -72,6 +72,24 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
     return x * c;
 }
 
+__host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
+{
+    vertex v;
+    v.x = x*16.0f-8.0f;
+    v.z = y*16.0f-8.0f;
+    v.y = (gp.x-0.2f)*10.0f+1.0f;
+    return v;
+}
+
+__host__ __device__ rgb gridpointToColor(gridpoint gp)
+{
+    rgb c;
+    c.x = (gp.x-0.2f)/0.06f*80.0f;
+    c.y = (gp.x-0.2f)/0.06f*80.0f;
+    c.z = 255;
+    return c;
+}
+
 #if __GPUVERSION__
 __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* device_grid_next, vertex* device_heightmap, 
                             vertex* device_watersurfacevertices, rgb* device_watersurfacecolors, 
@@ -85,6 +103,8 @@ __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* d
     int gridwidth = width+2;
     if(x < width && y < height)
     {
+        // is point offshore
+        bool offshore = device_heightmap[y*width + x].y < 1.0f;
         
         gridpoint center = device_grid[gridx+gridy*gridwidth];
         
@@ -104,20 +124,15 @@ __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* d
 
         int n = 100;
         u_center = (u_center + 1.0f/n * south + 1.0f/n * north + 1.0f/n * east + 1.0f/n * west) * (1.0f/(1.0f+4.0f/n));
-
-        device_grid_next[gridx+gridy*gridwidth] = u_center;
         
-        vertex v;
-        v.x = x/float(width)*16.0f-8.0f;
-        v.z = y/float(height)*16.0f-8.0f;
-        v.y = (u_center.x-0.2f)*10.0f+1.0f;
-        device_watersurfacevertices[x+y*width] = v;
+        /*
+         * if point is onshore write in grid(0,0)
+         */
+        device_grid_next[offshore*(gridx+gridy*gridwidth)] = u_center;
+        
+        device_watersurfacevertices[y * width + x] = gridpointToVertex(u_center, x / width, y / height);
        
-        rgb c;
-        c.x = (v.y-0.2f)/0.06f*80.0f;
-        c.y = (v.y-0.2f)/0.06f*80.0f;
-        c.z = 255;
-        device_watersurfacecolors[y * width + x] = c;
+        device_watersurfacecolors[y * width + x] = gridpointToColor(u_center);
 	}
 }
 
