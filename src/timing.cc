@@ -10,12 +10,13 @@ long getTime()
 {
     timeval timestamp;
     gettimeofday(&timestamp, 0);
-    return timestamp.tv_sec * 1000000 + timestamp.tv_usec;
+    return (timestamp.tv_sec * 1000000 + timestamp.tv_usec) / 1000;
 }
 
 void initTimer()
 {
     inittime = getTime();
+    marktime = getTime();
 }
 
 void markTime()

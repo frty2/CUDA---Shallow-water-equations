@@ -21,6 +21,7 @@
 #include "wavesimulator.h"
 #include "types.h"
 #include "math.h"
+#include "timing.h"
 
 #define ESC 27
 #define KEY_A 97
@@ -29,6 +30,11 @@
 #define KEY_S 115
 #define KEY_R 114
 #define KEY_F 102
+
+#define MAX_FPS 1000
+#ifndef max
+    #define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
 
 GLuint heightmap[2];
 GLuint watersurface[2];
@@ -58,12 +64,12 @@ float rotationY = 0;
 float rotationX = 10;
 float zoom = 10;
 
-timeval l_time, c_time;
-long current_time, last_time, fpsupdate_time;
-float fps, timediff;
+float fps;
+long fps_update_time;
 
 void createWindow(int argc, char **argv, int width, int height, void (*cb)(), int vertex_width, int vertex_height, rgb *heightmap_img, rgb *color_img)
 {
+    initTimer();
     callback = cb;
     window_width = width;
     window_height = height;
@@ -79,24 +85,11 @@ void createWindow(int argc, char **argv, int width, int height, void (*cb)(), in
 void paint()
 {
     frame++;
-    gettimeofday(&c_time, 0);
-    long current_time = c_time.tv_sec * 1000000 + c_time.tv_usec;
-    long last_time = l_time.tv_sec * 1000000 + l_time.tv_usec;
-
-    timediff = (current_time - last_time ) / 1000.0f;
-
-    l_time = c_time;
-
-    if(current_time - fpsupdate_time > 1000000)
-    {
-        fps = 1000.0f / timediff;
-        fpsupdate_time = current_time;
-    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     std::stringstream fps_text;
 
-    fps_text << "FPS: " << fps;
+    fps_text << "FPS: " << fps << " Frames total: " << frame;
     glMatrixMode(GL_MODELVIEW);
 
     glPushMatrix();
@@ -124,7 +117,7 @@ void paint()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glIndexPointer(GL_INT, 0, 0);
 
-    //glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
@@ -138,7 +131,7 @@ void paint()
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_INDEX_ARRAY);
 
-    //drawBorder();
+    drawBorder();
 
     glPopMatrix();
 
@@ -239,6 +232,17 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
 
 void animate(int v)
 {
+    long frametime = timeSinceMark();
+    
+    long currenttime = timeSinceInit();
+    if(currenttime - fps_update_time > 1000)
+    {
+        fps_update_time = currenttime;
+        fps = 1000 / frametime;
+    }
+
+    markTime();
+    
     if(callback != NULL)
     {
         callback();
@@ -247,8 +251,10 @@ void animate(int v)
     updateScene();
 
     glutPostRedisplay();
-
-    glutTimerFunc(0, animate, 0);
+    
+    long elapsed = timeSinceMark();
+    
+    glutTimerFunc( max(0, 1000.0/MAX_FPS - elapsed) , animate, 0);
 }
 
 void keypressed(unsigned char key, int x, int y)
@@ -279,7 +285,7 @@ void keypressed(unsigned char key, int x, int y)
     }
     if(key == KEY_F)
     {
-        rotationX = --rotationX < 0 ? 0 : rotationX;
+        rotationX = --rotationX < -45 ? -45 : rotationX;
     }
 }
 
