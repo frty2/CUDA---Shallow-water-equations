@@ -98,7 +98,14 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
     return v;
 }
 
-
+__host__ __device__ vertex vertexToColor(gridpoint gp)
+{
+    rgb c;
+    c.x = 50+(gp.y-1.0f)*100;
+    c.y = 100+(gp.y-1.0f)*100;
+    c.z = 255;
+    return c;
+}
 
 __host__ __device__ rgb vertexToColor(gridpoint gp)
 {
@@ -281,20 +288,3 @@ void destroyWaterSurface()
 
     state = UNINTIALISED;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
