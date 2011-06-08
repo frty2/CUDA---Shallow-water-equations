@@ -89,7 +89,25 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
     return x * c;
 }
 
+__host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
+{
+    vertex v;
+    v.x = x*16.0f-8.0f;
+    v.z = y*16.0f-8.0f;
+    v.y = gp.y;
+    return v;
+}
 
+
+
+__host__ __device__ rgb vertexToColor(gridpoint gp)
+{
+    rgb c;
+    c.x = 50+(gp.y-1.0f)*100;
+    c.y = 100+(gp.y-1.0f)*100;
+    c.z = 255;
+    return c;
+}
 
 #if __GPUVERSION__
 __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* device_grid_next, vertex* device_heightmap, 
@@ -104,9 +122,10 @@ __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* d
     int gridwidth = width+2;
     if(x < width && y < height)
     {
-        gridpoint center = device_grid[gridx+gridy*gridwidth];
+        // check if offshore
+        bool offshore = device_heightmap[y*width + x].y < 1.0f;
         
-        
+        gridpoint center = device_grid[gridx+gridy*gridwidth];        
         gridpoint north = device_grid[gridx+(gridy-1)*gridwidth];
         gridpoint west = device_grid[gridx-1+gridy*gridwidth];
         gridpoint south = device_grid[gridx+(gridy+1)*gridwidth];
@@ -127,19 +146,15 @@ __global__ void simulateWaveStep(int frame, gridpoint* device_grid, gridpoint* d
         
         gridpoint n_center = reverseU(u_center);
         
-        device_grid_next[gridx+gridy*gridwidth] = n_center;
-        
-        vertex v;
-        v.x = x/float(width)*16.0f-8.0f;
-        v.z = y/float(height)*16.0f-8.0f;
-        v.y = n_center.y;
-        device_watersurfacevertices[x+y*width] = v;
+        /* 
+         * write if point is offshore
+         * onshore points are mapped to grid(0,0)
+         */
+        device_grid_next[offshore*(gridx+gridy*gridwidth)] = n_center;
+          
+        device_watersurfacevertices[x+y*width] = gridpointToVertex(n_center, x/float(width), y/float(height));
        
-        rgb c;
-        c.x = 50+(v.y-1.0f)*100;
-        c.y = 100+(v.y-1.0f)*100;
-        c.z = 255;
-        device_watersurfacecolors[y * width + x] = c;
+        device_watersurfacecolors[y * width + x] = vertexToColor(n_center);
 	}
 }
 
