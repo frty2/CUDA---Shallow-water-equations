@@ -85,7 +85,7 @@ __host__ __device__ rgb gridpointToColor(gridpoint gp)
     c.x = 50+(gp.x-0.2f)/0.08f*150.0f;
     c.y = 70+(gp.x-0.2f)/0.08f*150.0f;
     c.z = 100+(gp.x-0.2f)/0.08f*150.0f;
-    c.w = 120;
+    c.w = 235;
     return c;
 }
 

@@ -32,6 +32,7 @@
 #define KEY_F 102
 
 #define MAX_FPS 1000
+
 #ifndef max
     #define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
@@ -117,16 +118,24 @@ void paint()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glIndexPointer(GL_INT, 0, 0);
 
-   // glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    //underground heightmap
+    glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
     
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
-    glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
+    glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
     glVertexPointer(3, GL_FLOAT, 12, 0);
     
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //watersurface
     glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    
+    glDisable(GL_BLEND);
+    
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_INDEX_ARRAY);
