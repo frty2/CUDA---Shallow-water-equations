@@ -12,8 +12,6 @@
 
 const float GRAVITY = 9.83219f/2.0f; //0.5f * Fallbeschleunigung
 const float dt = 0.01f;
-const float dx = 1.0f;
-const float dy = 1.0f;
 const float NN = 0.2f;
 
 const int UNINTIALISED = 0;
@@ -104,33 +102,31 @@ __global__ void simulateWaveStep(gridpoint* device_grid, gridpoint* device_grid_
     int gridy = y + 1;
     
     int gridwidth = width+2;
+	int gridpitch = gridy*gridwidth;
+	
     if(x < width && y < height)
     {
-        // is point offshore
-                
-        gridpoint center = device_grid[gridx+gridy*gridwidth];
+        gridpoint center = device_grid[gridx+gridpitch];
+		
+		// is point offshore
         bool offshore = device_heightmap[y*width + x].y < center.x - NN + 1.0f;
 		
-		
-        gridpoint north = device_grid[gridx+(gridy-1)*gridwidth];
-        gridpoint west = device_grid[gridx-1+gridy*gridwidth];
-        gridpoint south = device_grid[gridx+(gridy+1)*gridwidth];
-        gridpoint east = device_grid[gridx+1+gridy*gridwidth];
+        gridpoint north = device_grid[gridx+gridpitch-gridwidth];
+        gridpoint west = device_grid[x+gridpitch];
+        gridpoint south = device_grid[gridx+gridpitch+gridwidth];
+        gridpoint east = device_grid[gridx+1+gridpitch];
         
+        gridpoint u_south = 0.5f*( south + center ) - 0.5f * dt *( G(south) - G(center) );
+        gridpoint u_north = 0.5f*( north + center ) - 0.5f * dt *( G(north) - G(center) );
+        gridpoint u_west = 0.5f*( west + center ) - 0.5f * dt *( F(west) -F(center) );
+        gridpoint u_east = 0.5f*( east + center ) - 0.5f * dt *( F(east) -F(center) );
         
-        gridpoint u_south = 0.5f*( south + center ) - dt/(2*dy) *( G(south) - G(center) );
-        gridpoint u_north = 0.5f*( north + center ) - dt/(2*dy) *( G(north) - G(center) );
-        gridpoint u_west = 0.5f*( west + center ) - dt/(2*dx) *( F(west) -F(center) );
-        gridpoint u_east = 0.5f*( east + center ) - dt/(2*dx) *( F(east) -F(center) );
-        
-        gridpoint u_center = center - dt/dx * ( F(u_east)-F(u_west) ) - dt/dy * ( G(u_south) - G(u_north) );
-        
+        gridpoint u_center = center - 1.0f*dt * ( F(u_east)-F(u_west) ) - 1.0f*dt * ( G(u_south) - G(u_north) );
         
         /*
          * if point is onshore write in grid(0,0)
          */
-        device_grid_next[offshore*(gridx+gridy*gridwidth)] = u_center;
-          
+        device_grid_next[offshore*(gridx+gridpitch)] = u_center;  
 	}
 }
 
@@ -162,7 +158,7 @@ __global__ void initWaterSurface(gridpoint *device_grid, int width, int height)
         gp.x = NN;
         gp.y = 0.0f;
         gp.z = 0.0f;
-        if(x < 300 && x > 200 && y > 100 && y < 200)
+        if(x < 300 && x > 200 && y > 300 && y < 400)
         {
             gp.x = NN+(NN/20)*cos(0.031415f*(x-50))+(NN/30)*sin(0.031415f*(y-25));
             gp.y = 0;
