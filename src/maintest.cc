@@ -18,11 +18,11 @@ int main(int argc, char ** argv)
 
     readPPM("../res/heightmap.ppm", heightmap_img, img_width, img_height);
     readPPM("../res/texture.ppm", color_img, img_width, img_height);
-    
+
     //Calc the heightmap out of the rgb
     int width = img_width;
     int height = img_height;
-    
+
     vertex *vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);
 
@@ -38,16 +38,16 @@ int main(int argc, char ** argv)
             vertices[y * width + x] = v;
         }
     }
-    
+
     initWaterSurface(width, height, vertices);
-    
+
     vertex *watersurfacevertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(watersurfacevertices);
-    
-    rgb *watersurfacecolors= (rgb *) malloc(width * height * sizeof(rgb));
+
+    rgb *watersurfacecolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watersurfacecolors);
-    
-    for(int step = 0;step < 100;step++)
+
+    for(int step = 0; step < 100; step++)
     {
         computeNext(0, width, height, watersurfacevertices, watersurfacecolors);
     }

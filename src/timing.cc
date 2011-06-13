@@ -2,7 +2,7 @@
 
 #include <sys/time.h>
 
- // in milliseconds
+// in milliseconds
 long inittime;
 long marktime;
 

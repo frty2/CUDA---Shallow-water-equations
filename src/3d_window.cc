@@ -34,7 +34,7 @@
 #define MAX_FPS 1000
 
 #ifndef max
-    #define max(a,b) (((a) > (b)) ? (a) : (b))
+#define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
 GLuint heightmap[2];
@@ -121,21 +121,21 @@ void paint()
     //underground heightmap
     glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
     glVertexPointer(3, GL_FLOAT, 12, 0);
-    
-    
+
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //watersurface
     glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
-    
+
     glDisable(GL_BLEND);
-    
+
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_INDEX_ARRAY);
@@ -154,12 +154,12 @@ void updateScene()
     vertex *watersurfacevertices = (vertex *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacevertices);
     glUnmapBuffer(GL_ARRAY_BUFFER);
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacecolors);
     glUnmapBuffer(GL_ARRAY_BUFFER);
-    
+
     computeNext(0, width, height, watersurfacevertices, watersurfacecolors);
 }
 
@@ -227,7 +227,7 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
     glGenBuffers(1, &indexbufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
-    
+
     /*
      * TEMP
      */
@@ -242,7 +242,7 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
 void animate(int v)
 {
     long frametime = timeSinceMark();
-    
+
     long currenttime = timeSinceInit();
     if(currenttime - fps_update_time > 1000)
     {
@@ -251,7 +251,7 @@ void animate(int v)
     }
 
     markTime();
-    
+
     if(callback != NULL)
     {
         callback();
@@ -260,10 +260,10 @@ void animate(int v)
     updateScene();
 
     glutPostRedisplay();
-    
+
     long elapsed = timeSinceMark();
-    
-    glutTimerFunc( max(0, 1000.0/MAX_FPS - elapsed) , animate, 0);
+
+    glutTimerFunc( max(0, 1000.0 / MAX_FPS - elapsed) , animate, 0);
 }
 
 void keypressed(unsigned char key, int x, int y)
@@ -361,7 +361,7 @@ void drawString(int x, int y, const std::string &text, void *font)
 void drawBorder()
 {
     glColor3f(1.0f, 1.0f, 1.0f);
-    
+
     glBegin(GL_QUADS);
     glVertex3f(-8.0f, 0.0f, -8.0f);
     glVertex3f(-8.0f, 2.0f, -8.0f);

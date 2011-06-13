@@ -13,20 +13,20 @@ int initCudaInfo()
 {
     cudaError_t error;
     int devicecount;
-    
+
     error =  cudaGetDeviceCount(&devicecount);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);    
+    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     CHECK_NE(devicecount, 0) << "Error: no CUDA devices found.";
-    
-    devprops = (cudaDeviceProp*)malloc(sizeof(cudaDeviceProp)*devicecount);
+
+    devprops = (cudaDeviceProp*)malloc(sizeof(cudaDeviceProp) * devicecount);
     CHECK_NOTNULL(devprops);
-    
+
     for( int device = 0; device < devicecount; device++ )
     {
         error =  cudaGetDeviceProperties(&devprops[device], device);
         CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     }
-    
+
     return devicecount;
 }
 
@@ -126,5 +126,5 @@ std::string getName(int device)
 
 float getRevisionNumber(int& major, int& minor, int device)
 {
-    return devprops[device].major*10 + devprops[device].minor;
+    return devprops[device].major * 10 + devprops[device].minor;
 }
