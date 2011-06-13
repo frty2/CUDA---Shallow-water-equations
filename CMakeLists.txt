@@ -68,6 +68,26 @@ target_link_libraries(swegpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swegpu ${GLUT_LIBRARY})
 target_link_libraries(swegpu ${OPENGL_LIBRARIES})
 
+set(TEST_SRC 
+    src/maintest.cc
+    src/ppm_reader.cc
+    src/ppm_writer.cc
+    src/3d_window.cc
+    src/timing.cc
+    src/wavesimulator.cu
+    src/cudaInfo.cu
+    )
+
+#test version
+cuda_add_executable(swetest ${TEST_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12)
+set_target_properties(swetest PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
+set_target_properties(swetest PROPERTIES LINKER_LANGUAGE C)
+target_link_libraries(swetest ${GLOG_LIBRARY})
+target_link_libraries(swetest ${GFLAGS_LIBRARY})
+target_link_libraries(swetest ${YAMLCPP_LIBRARY})
+target_link_libraries(swetest ${GLUT_LIBRARY})
+target_link_libraries(swetest ${OPENGL_LIBRARIES})
+
 # common flags
 SET(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-long-long -Wno-variadic-macros")
 SET(CMAKE_CXX_FLAGS_RELEASE "-DNEXPENSIVE -O2 -g0")

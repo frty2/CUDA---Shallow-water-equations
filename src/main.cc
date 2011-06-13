@@ -7,6 +7,7 @@
 #include "3d_window.h"
 #include "math.h"
 
+
 int main(int argc, char ** argv)
 {
     google::InitGoogleLogging(argv[0]);
