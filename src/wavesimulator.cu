@@ -10,8 +10,8 @@
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#define timestep 0.01f
-#define halftimestep 0.005f
+#define timestep 0.004f
+#define halftimestep 0.002f
 
 const float GRAVITY = 9.83219f / 2.0f; //0.5f * Fallbeschleunigung
 
@@ -19,7 +19,7 @@ const float NN = 0.2f;
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
-const int stepsperframe = 10;
+const int stepsperframe = 20;
 
 gridpoint* device_grid;
 gridpoint* device_grid_next;
@@ -29,14 +29,13 @@ rgb* device_watersurfacecolors;
 
 int state = UNINTIALISED;
 
-
 __host__ __device__ gridpoint F(gridpoint u)
 {
     float uyx = u.y / u.x;
 
     gridpoint F;
     F.x = u.y;
-    F.y = u.y * uyx + (GRAVITY * u.x * u.x);
+    F.y = u.y * uyx + GRAVITY * (u.x * u.x);
     F.z = u.z * uyx;
     return F;
 }
@@ -47,7 +46,7 @@ __host__ __device__ gridpoint G(gridpoint u)
     gridpoint G;
     G.x = u.z;
     G.y = u.y * uzx;
-    G.z = u.z * uzx + (GRAVITY * u.x * u.x);
+    G.z = u.z * uzx + GRAVITY * (u.x * u.x);
     return G;
 }
 
@@ -92,9 +91,9 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
 __host__ __device__ rgb gridpointToColor(gridpoint gp)
 {
     rgb c;
-    c.x = min(50 + (gp.x - NN) / 0.08f * 150.0f, 255);
-    c.y = min(70 + (gp.x - NN) / 0.08f * 150.0f, 255);
-    c.z = min(100 + (gp.x - NN) / 0.08f * 150.0f, 255);
+    c.x = min(50 + (gp.x - NN) / (NN/10) * 150.0f, 255);
+    c.y = min(70 + (gp.x - NN) / (NN/10) * 150.0f, 255);
+    c.z = min(100 + (gp.x - NN) / (NN/10) * 150.0f, 255);
     c.w = 235;
     return c;
 }
@@ -128,8 +127,10 @@ __global__ void simulateWaveStep(gridpoint* device_grid, gridpoint* device_grid_
         gridpoint u_west = 0.5f * ( west + center ) - halftimestep * ( F(west) - F(center) );
         gridpoint u_east = 0.5f * ( east + center ) - halftimestep * ( F(east) - F(center) );
 
-        gridpoint u_center = center - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
-
+        gridpoint u_center = center - timestep * ( F(u_east) - F(u_west) ) -  timestep * ( G(u_south) - G(u_north) );
+        
+        //int n = 10000;
+        //u_center = (n * u_center + south + north + east + west) * (1.0f/(n+4));
         /*
          * if point is onshore write in grid(0,0)
          */
@@ -165,9 +166,9 @@ __global__ void initWaterSurface(gridpoint *device_grid, int width, int height)
         gp.x = NN;
         gp.y = 0.0f;
         gp.z = 0.0f;
-        if(x < 300 && x > 200 && y > 300 && y < 400)
+        if(x < 150 && x > 100 && y > 150 && y < 200)
         {
-            gp.x = NN + (NN / 20) * cos(0.031415f * (x - 50)) + (NN / 30) * sin(0.031415f * (y - 25));
+            gp.x = NN + (NN / 20) * cos(0.031415f * (x - 50)) + (NN / 20) * sin(0.031415f * (y - 25));
             gp.y = 0;
             gp.z = 0;
         }

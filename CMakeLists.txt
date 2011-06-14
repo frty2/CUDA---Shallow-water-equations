@@ -59,7 +59,7 @@ set(GPU_SRC
     )
 
 #cuda version
-cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12)
+cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -keep)
 set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(swegpu ${GLOG_LIBRARY})
@@ -79,7 +79,7 @@ set(TEST_SRC
     )
 
 #test version
-cuda_add_executable(swetest ${TEST_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -maxrregcount=20)
+cuda_add_executable(swetest ${TEST_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -keep)
 set_target_properties(swetest PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swetest PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(swetest ${GLOG_LIBRARY})
