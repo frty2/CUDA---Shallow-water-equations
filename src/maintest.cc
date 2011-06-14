@@ -1,6 +1,8 @@
 #include <iostream>
 #include <glog/logging.h>
+#include <gflags/gflags.h>
 #include <stdio.h>
+
 #include "stdlib.h"
 #include "types.h"
 #include "ppm_reader.h"
@@ -10,7 +12,9 @@
 int main(int argc, char ** argv)
 {
     google::InitGoogleLogging(argv[0]);
-
+    google::InstallFailureSignalHandler();
+    
+    google::ParseCommandLineFlags(&argc, &argv, true);
     rgb *heightmap_img;
     rgb *color_img;
     int img_width;
@@ -47,9 +51,9 @@ int main(int argc, char ** argv)
     rgb *watersurfacecolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watersurfacecolors);
 
-    for(int step = 0; step < 100; step++)
+    for(int step = 0; step < 10; step++)
     {
-        computeNext(0, width, height, watersurfacevertices, watersurfacecolors);
+        computeNext(width, height, watersurfacevertices, watersurfacecolors);
     }
 
     free(heightmap_img);

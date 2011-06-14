@@ -62,7 +62,7 @@ void drawBorder();
 
 int frame = 0;
 float rotationY = 0;
-float rotationX = 10;
+float rotationX = 45;
 float zoom = 10;
 
 float fps;
@@ -160,7 +160,7 @@ void updateScene()
     CHECK_NOTNULL(watersurfacecolors);
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
-    computeNext(0, width, height, watersurfacevertices, watersurfacecolors);
+    computeNext(width, height, watersurfacevertices, watersurfacecolors);
 }
 
 void initScene(int w, int h, rgb *heightmap_img, rgb *colors)

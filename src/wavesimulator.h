@@ -4,6 +4,6 @@
 
 void initWaterSurface(int width, int height, vertex* heightmapvertices);
 
-void computeNext(float time, int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors);
+void computeNext(int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors);
 
 void destroyWaterSurface();
