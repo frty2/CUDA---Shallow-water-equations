@@ -49,7 +49,7 @@ int window_width;
 int window_height;
 
 
-void initScene(int width, int height, rgb *heightmap_img, rgb *color_img);
+void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img, int grid_width, int grid_height);
 void initGlut(int argc, char ** argv);
 void initGL();
 
@@ -68,17 +68,19 @@ float zoom = 10;
 float fps;
 long fps_update_time;
 
-void createWindow(int argc, char **argv, int width, int height, void (*cb)(), int vertex_width, int vertex_height, rgb *heightmap_img, rgb *color_img)
+void createWindow(int argc, char **argv, int w_width, int w_height,
+                  int img_width, int img_height, rgb *heightmap_img, rgb *color_img,
+                  int grid_width, int grid_height, void (*cb)())
 {
     initTimer();
     callback = cb;
-    window_width = width;
-    window_height = height;
+    window_width = w_width;
+    window_height = w_height;
 
     initGlut(argc, argv);
     initGL();
 
-    initScene(vertex_width, vertex_height, heightmap_img, color_img);
+    initScene(img_width, img_height, heightmap_img, color_img, grid_width, grid_height);
 
     glutMainLoop();
 }
@@ -163,36 +165,50 @@ void updateScene()
     computeNext(width, height, watersurfacevertices, watersurfacecolors);
 }
 
-void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
+void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img, int grid_width, int grid_height)
 {
-    width = w;
-    height = h;
+    width = grid_width;
+    height = grid_height;
 
     //Calc the heightmap out of the rgb
     vertex *vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);
 
-    for(int y = 0; y < height; y ++)
+    for(int y = 0; y < grid_height; y ++)
     {
-        for(int x = 0; x < width; x ++)
+        for(int x = 0; x < grid_width; x ++)
         {
+            int imgx = x*img_width/grid_width;
+            int imgy = y*img_height/grid_height;
             vertex v;
-            v.x = x * 16.0f / width - 8;
-            v.z = y * 16.0f / height - 8;
-            v.y = heightmap_img[y * width + x].x / 256.0f + heightmap_img[y * width + x].y / 256.0f + heightmap_img[y * width + x].z / 256.0f;
+            v.x = x * 16.0f / (width-1) - 8;
+            v.z = y * 16.0f / (height-1) - 8;
+            v.y = heightmap_img[imgy * img_width + imgx].x / 256.0f + heightmap_img[imgy * img_width + imgx].y / 256.0f + heightmap_img[imgy * img_width + imgx].z / 256.0f;
 
-            vertices[y * width + x] = v;
+            vertices[y * grid_width + x] = v;
         }
     }
-
+    
+    rgb *vertexcolors = (rgb *) malloc(width * height * sizeof(rgb));
+    CHECK_NOTNULL(vertexcolors);
+    
+    for(int y = 0; y < grid_height; y ++)
+    {
+        for(int x = 0; x < grid_width; x ++)
+        {
+            int imgx = x*img_width/grid_width;
+            int imgy = y*img_height/grid_height;
+            vertexcolors[y * grid_width + x] = color_img[imgy*img_width+imgx];
+        }
+    }
 
     //Calc the indices for the QUADS
     int *indices = (int *) malloc(4 * (width - 1) * (height - 1) * sizeof(int));
     CHECK_NOTNULL(indices);
 
-    for(int y = 0; y < height - 1; y++)
+    for(int y = 0; y < grid_height - 1; y++)
     {
-        for(int x = 0; x < width - 1; x++)
+        for(int x = 0; x < grid_width - 1; x++)
         {
             indices[4 * ( y * (width - 1) + x ) + 0] = (y + 1) * width + x;
             indices[4 * ( y * (width - 1) + x ) + 1] = (y + 1) * width + x + 1;
@@ -211,7 +227,7 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
     glGenBuffers(2, &heightmap[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, heightmap[1]);
-    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(rgb), colors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(rgb), vertexcolors, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, heightmap[0]);
     glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(vertex), vertices, GL_STATIC_DRAW);
@@ -228,14 +244,12 @@ void initScene(int w, int h, rgb *heightmap_img, rgb *colors)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
 
-    /*
-     * TEMP
-     */
+
     initWaterSurface(width, height, vertices);
 
     free(vertices);
     free(indices);
-    free(colors);
+    free(vertexcolors);
     free(watercolors);
 }
 

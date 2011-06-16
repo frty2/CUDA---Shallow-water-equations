@@ -26,7 +26,10 @@ IF(APPLE)
     include_directories(/System/Library/Frameworks)
 ENDIF(APPLE)
 
+
 include_directories("src")
+configure_file(${CMAKE_SOURCE_DIR}/src/wavesimulator.cu ${CMAKE_SOURCE_DIR}/src/wavesimulator.cc COPYONLY)
+install(DIRECTORY res/ DESTINATION res)
 
 set(CPU_SRC 
     src/main.cc
@@ -38,7 +41,6 @@ set(CPU_SRC
     )
     
 #cpu version
-configure_file(src/wavesimulator.cu src/wavesimulator.cc COPYONLY)
 add_executable(swecpu ${CPU_SRC})
 set_target_properties(swecpu PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
 target_link_libraries(swecpu ${GLOG_LIBRARY})

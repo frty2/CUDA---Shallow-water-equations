@@ -21,11 +21,11 @@ int main(int argc, char ** argv)
     int img_width;
     int img_height;
 
-    readPPM("../res/heightmap.ppm", heightmap_img, img_width, img_height);
-    readPPM("../res/texture.ppm", color_img, img_width, img_height);
+    readPPM("res/heightmap.ppm", heightmap_img, img_width, img_height);
+    readPPM("res/texture.ppm", color_img, img_width, img_height);
 
 
-    createWindow(argc, argv, 800, 600, NULL, 256, 256, heightmap_img, color_img);
+    createWindow(argc, argv, 800, 600, 256, 256, heightmap_img, color_img, 256, 256, NULL);
 
     free(heightmap_img);
     free(color_img);
