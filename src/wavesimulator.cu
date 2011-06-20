@@ -507,7 +507,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
     addWave(wave, width, height, grid_pitch_elements);
-    free(wave);
 #else
     size_t sizeInBytes;
 
@@ -541,7 +540,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     initWaterSurface (device_grid_next, gridwidth, gridheight);
 
     addWave(wave, width, height);
-    free(wave);
 #endif
 
     state = INITIALISED;
