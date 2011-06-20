@@ -1,0 +1,6 @@
+# a wavescene
+
+running_time: 40
+landscape_filename: res/heightmap3.ppm
+threshhold_filename: res/texture3.ppm 
+wave_filename: wave3.ppm
