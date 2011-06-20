@@ -5,6 +5,11 @@
 
 #include "types.h"
 
+float height(rgb color)
+{
+    return color.x / 256.0f + color.y / 256.0f + color.z / 256.0f;
+}
+
 void createLandscape(rgb *img, int img_width, int img_height, 
                             int width, int height, vertex *& vertices)
 {
@@ -20,10 +25,25 @@ void createLandscape(rgb *img, int img_width, int img_height,
             vertex v;
             v.x = x * 16.0f / (width - 1) - 8;
             v.z = y * 16.0f / (height - 1) - 8;
-            v.y = img[imgy * img_width + imgx].x / 256.0f + 
-                  img[imgy * img_width + imgx].y / 256.0f + 
-                  img[imgy * img_width + imgx].z / 256.0f;
+            v.y = height(img[imgy * img_width + imgx]);
             vertices[y * width + x] = v;
+        }
+    }
+}
+
+void createHeightData(rgb *img, int img_width, int img_height, 
+                            int width, int height, float *& heights)
+{
+    heights = (float *) malloc(width*height*sizeof(float));
+    CHECK_NOTNULL(heights);
+    
+    for(int y = 0; y < height; y ++)
+    {
+        for(int x = 0; x < width; x ++)
+        {
+            int imgx = x * (img_width - 1) / (width - 1);
+            int imgy = y * (img_height - 1) / (height - 1);
+            heights[y * width + x] = height(img[imgy * img_width + imgx]);
         }
     }
 }
