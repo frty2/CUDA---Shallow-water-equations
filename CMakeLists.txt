@@ -29,7 +29,7 @@ ENDIF(APPLE)
 
 include_directories("src")
 configure_file(${CMAKE_SOURCE_DIR}/src/wavesimulator.cu ${CMAKE_SOURCE_DIR}/src/wavesimulator.cc COPYONLY)
-install(DIRECTORY res/ DESTINATION res)
+file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CPU_SRC 
     src/main.cc

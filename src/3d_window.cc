@@ -31,7 +31,7 @@
 #define KEY_R 114
 #define KEY_F 102
 
-#define MAX_FPS 1000
+#define MAX_FPS 30
 
 #ifndef max
 #define max(a,b) (((a) > (b)) ? (a) : (b))
@@ -40,8 +40,6 @@
 GLuint heightmap[2];
 GLuint watersurface[2];
 GLuint indexbufferID;
-
-void (*callback)() = NULL;
 
 int width, height;
 
@@ -69,11 +67,10 @@ float fps;
 long fps_update_time;
 
 void createWindow(int argc, char **argv, int w_width, int w_height,
-                  int img_width, int img_height, rgb *heightmap_img, rgb *color_img,
-                  int grid_width, int grid_height, void (*cb)())
+                  int img_width, int img_height, rgb *heightmap_img,
+                  rgb *color_img, int grid_width, int grid_height)
 {
     initTimer();
-    callback = cb;
     window_width = w_width;
     window_height = w_height;
 
@@ -178,27 +175,27 @@ void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img
     {
         for(int x = 0; x < grid_width; x ++)
         {
-            int imgx = x*img_width/grid_width;
-            int imgy = y*img_height/grid_height;
+            int imgx = x * (img_width - 1) / (grid_width - 1);
+            int imgy = y * (img_height - 1) / (grid_height - 1);
             vertex v;
-            v.x = x * 16.0f / (width-1) - 8;
-            v.z = y * 16.0f / (height-1) - 8;
+            v.x = x * 16.0f / (width - 1) - 8;
+            v.z = y * 16.0f / (height - 1) - 8;
             v.y = heightmap_img[imgy * img_width + imgx].x / 256.0f + heightmap_img[imgy * img_width + imgx].y / 256.0f + heightmap_img[imgy * img_width + imgx].z / 256.0f;
 
             vertices[y * grid_width + x] = v;
         }
     }
-    
+
     rgb *vertexcolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(vertexcolors);
-    
+
     for(int y = 0; y < grid_height; y ++)
     {
         for(int x = 0; x < grid_width; x ++)
         {
-            int imgx = x*img_width/grid_width;
-            int imgy = y*img_height/grid_height;
-            vertexcolors[y * grid_width + x] = color_img[imgy*img_width+imgx];
+            int imgx = x * (img_width - 1) / (grid_width - 1);
+            int imgy = y * (img_height - 1) / (grid_height - 1);
+            vertexcolors[y * grid_width + x] = color_img[imgy * img_width + imgx];
         }
     }
 
@@ -265,11 +262,6 @@ void animate(int v)
     }
 
     markTime();
-
-    if(callback != NULL)
-    {
-        callback();
-    }
 
     updateScene();
 

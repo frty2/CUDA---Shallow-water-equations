@@ -3,6 +3,8 @@
 #include <gflags/gflags.h>
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include "stdlib.h"
 #include "types.h"
 #include "ppm_reader.h"
@@ -14,18 +16,21 @@ int main(int argc, char ** argv)
 {
     google::InitGoogleLogging(argv[0]);
     google::InstallFailureSignalHandler();
-    
+
     google::ParseCommandLineFlags(&argc, &argv, true);
     rgb *heightmap_img;
     rgb *color_img;
     int img_width;
     int img_height;
+    char buf[256];
+    getcwd(buf, 256);
+    std::cout << buf << std::endl;
 
     readPPM("res/heightmap.ppm", heightmap_img, img_width, img_height);
     readPPM("res/texture.ppm", color_img, img_width, img_height);
 
 
-    createWindow(argc, argv, 800, 600, 256, 256, heightmap_img, color_img, 256, 256, NULL);
+    createWindow(argc, argv, 800, 600, 256, 256, heightmap_img, color_img, 256, 256);
 
     free(heightmap_img);
     free(color_img);

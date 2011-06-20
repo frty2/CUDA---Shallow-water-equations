@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
 {
     google::InitGoogleLogging(argv[0]);
     google::InstallFailureSignalHandler();
-    
+
     google::ParseCommandLineFlags(&argc, &argv, true);
     rgb *heightmap_img;
     rgb *color_img;
