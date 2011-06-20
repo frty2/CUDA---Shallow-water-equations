@@ -54,7 +54,8 @@ int main(int argc, char ** argv)
     vertex *wave;
     float *waveheights;
     rgb *colors;
-
+    
+    
 
     createLandscape(landscape_img, landscape_width, landscape_height, 256, 256, landscape);
     

@@ -71,7 +71,7 @@ void parse_wavescene(const char* filename, std::string &landscape_filename, std:
 	}
 	else
 	{
-		LOG(INFO) << "Datei nicht gefunden.";
+		LOG(ERROR) << "Datei nicht gefunden.";
 		exit (1);
 	}
 }

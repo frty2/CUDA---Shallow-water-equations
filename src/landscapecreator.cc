@@ -51,8 +51,8 @@ void createHeightData(rgb *img, int img_width, int img_height,
 void createLandscapeColors(rgb *img, int img_width, int img_height, 
                             int width, int height, rgb *& colors)
 {
-    rgb *vertexcolors = (rgb *) malloc(width * height * sizeof(rgb));
-    CHECK_NOTNULL(vertexcolors);
+    colors = (rgb *) malloc(width * height * sizeof(rgb));
+    CHECK_NOTNULL(colors);
     
     for(int y = 0; y < height; y ++)
     {
@@ -60,7 +60,7 @@ void createLandscapeColors(rgb *img, int img_width, int img_height,
         {
             int imgx = x * (img_width - 1) / (width - 1);
             int imgy = y * (img_height - 1) / (height - 1);
-            vertexcolors[y * width + x] = img[imgy * img_width + imgx];
+            colors[y * width + x] = img[imgy * img_width + imgx];
         }
     }
 }

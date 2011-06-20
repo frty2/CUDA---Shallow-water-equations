@@ -173,7 +173,6 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
     
     rgb* watercolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watercolors);
-    memset(watercolors, 0, width * height * sizeof(rgb));
 
     glGenBuffers(2, &heightmap[0]);
 

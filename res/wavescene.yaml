@@ -2,6 +2,6 @@
 
 running_time: 40
 landscape_filename: ../res/heightmap.ppm
-landscape_color_filename: ../res/texture.ppm 
+landscape_color_filename: ../res/texture111.ppm 
 threshhold_filename: ../res/heightmap.ppm 
 wave_filename: ../res/scene.ppm
