@@ -94,8 +94,7 @@ void paint()
 
     glPushMatrix();
     glLoadIdentity();
-
-
+    
     glTranslatef(0.0f, -5.0f, 0.0f);
     glTranslatef(0, -rotationX / 4.0f, -zoom);
     glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
@@ -187,17 +186,17 @@ void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img
     }
 
     rgb *vertexcolors = (rgb *) malloc(width * height * sizeof(rgb));
-    CHECK_NOTNULL(vertexcolors);
+       CHECK_NOTNULL(vertexcolors);
 
-    for(int y = 0; y < grid_height; y ++)
-    {
-        for(int x = 0; x < grid_width; x ++)
-        {
-            int imgx = x * (img_width - 1) / (grid_width - 1);
-            int imgy = y * (img_height - 1) / (grid_height - 1);
-            vertexcolors[y * grid_width + x] = color_img[imgy * img_width + imgx];
-        }
-    }
+       for(int y = 0; y < grid_height; y ++)
+       {
+           for(int x = 0; x < grid_width; x ++)
+           {
+               int imgx = x * (img_width - 1) / (grid_width - 1);
+               int imgy = y * (img_height - 1) / (grid_height - 1);
+               vertexcolors[y * grid_width + x] = color_img[imgy * img_width + imgx];
+           }
+       }
 
     //Calc the indices for the QUADS
     int *indices = (int *) malloc(4 * (width - 1) * (height - 1) * sizeof(int));

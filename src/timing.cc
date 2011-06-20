@@ -35,6 +35,3 @@ long timeSinceInit()
     long currenttime = getTime();
     return currenttime - inittime;
 }
-
-
-

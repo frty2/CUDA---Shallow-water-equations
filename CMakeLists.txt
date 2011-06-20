@@ -38,6 +38,8 @@ set(CPU_SRC
     src/3d_window.cc
     src/timing.cc
     src/wavesimulator.cc
+    src/landscapecreator.cc
+    src/wavesceneparser.cc
     )
     
 #cpu version
@@ -58,6 +60,8 @@ set(GPU_SRC
     src/timing.cc
     src/wavesimulator.cu
     src/cudaInfo.cu
+    src/landscapecreator.cc
+    src/wavesceneparser.cc
     )
 
 #cuda version
@@ -78,6 +82,8 @@ set(GPU_TEST_SRC
     src/timing.cc
     src/wavesimulator.cu
     src/cudaInfo.cu
+    src/landscapecreator.cc
+    src/wavesceneparser.cc
     )
 
 #cuda test version
@@ -97,6 +103,8 @@ set(CPU_TEST_SRC
     src/3d_window.cc
     src/timing.cc
     src/wavesimulator.cc
+    src/landscapecreator.cc
+    src/wavesceneparser.cc
     )
 
 #test version
