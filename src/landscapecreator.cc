@@ -5,7 +5,7 @@
 
 #include "types.h"
 
-float height(rgb color)
+float vertexheight(rgb color)
 {
     return color.x / 256.0f + color.y / 256.0f + color.z / 256.0f;
 }
@@ -25,7 +25,7 @@ void createLandscape(rgb *img, int img_width, int img_height,
             vertex v;
             v.x = x * 16.0f / (width - 1) - 8;
             v.z = y * 16.0f / (height - 1) - 8;
-            v.y = height(img[imgy * img_width + imgx]);
+            v.y = vertexheight(img[imgy * img_width + imgx]);
             vertices[y * width + x] = v;
         }
     }
@@ -43,7 +43,7 @@ void createHeightData(rgb *img, int img_width, int img_height,
         {
             int imgx = x * (img_width - 1) / (width - 1);
             int imgy = y * (img_height - 1) / (height - 1);
-            heights[y * width + x] = height(img[imgy * img_width + imgx]);
+            heights[y * width + x] = vertexheight(img[imgy * img_width + imgx]);
         }
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vector_types.h"
+#include <string>
 
 typedef uchar4 rgb;
 

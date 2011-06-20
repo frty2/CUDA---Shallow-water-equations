@@ -46,8 +46,7 @@ int width, height;
 int window_width;
 int window_height;
 
-
-void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img, int grid_width, int grid_height);
+void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int grid_height);
 void initGlut(int argc, char ** argv);
 void initGL();
 
@@ -66,10 +65,15 @@ float zoom = 10;
 float fps;
 long fps_update_time;
 
+void (*callback) (vertex*, rgb*) = NULL;
+
 void createWindow(int argc, char **argv, int w_width, int w_height,
-                  int img_width, int img_height, rgb *heightmap_img,
-                  rgb *color_img, int grid_width, int grid_height)
+                  int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors, 
+                  void (*updatefunction) (vertex*, rgb*))
 {
+    callback = updatefunction;
+    CHECK_NOTNULL(callback);
+    
     initTimer();
     window_width = w_width;
     window_height = w_height;
@@ -77,7 +81,7 @@ void createWindow(int argc, char **argv, int w_width, int w_height,
     initGlut(argc, argv);
     initGL();
 
-    initScene(img_width, img_height, heightmap_img, color_img, grid_width, grid_height);
+    initScene(landscape, wave, colors, grid_width, grid_height);
 
     glutMainLoop();
 }
@@ -146,57 +150,11 @@ void paint()
     glutSwapBuffers();
 }
 
-void updateScene()
-{
-    glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
-    vertex *watersurfacevertices = (vertex *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    CHECK_NOTNULL(watersurfacevertices);
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-
-    glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
-    rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    CHECK_NOTNULL(watersurfacecolors);
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-
-    computeNext(width, height, watersurfacevertices, watersurfacecolors);
-}
-
-void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img, int grid_width, int grid_height)
+void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int grid_height)
 {
     width = grid_width;
     height = grid_height;
 
-    //Calc the heightmap out of the rgb
-    vertex *vertices = (vertex *) malloc(width * height * sizeof(vertex));
-    CHECK_NOTNULL(vertices);
-
-    for(int y = 0; y < grid_height; y ++)
-    {
-        for(int x = 0; x < grid_width; x ++)
-        {
-            int imgx = x * (img_width - 1) / (grid_width - 1);
-            int imgy = y * (img_height - 1) / (grid_height - 1);
-            vertex v;
-            v.x = x * 16.0f / (width - 1) - 8;
-            v.z = y * 16.0f / (height - 1) - 8;
-            v.y = heightmap_img[imgy * img_width + imgx].x / 256.0f + heightmap_img[imgy * img_width + imgx].y / 256.0f + heightmap_img[imgy * img_width + imgx].z / 256.0f;
-
-            vertices[y * grid_width + x] = v;
-        }
-    }
-
-    rgb *vertexcolors = (rgb *) malloc(width * height * sizeof(rgb));
-       CHECK_NOTNULL(vertexcolors);
-
-       for(int y = 0; y < grid_height; y ++)
-       {
-           for(int x = 0; x < grid_width; x ++)
-           {
-               int imgx = x * (img_width - 1) / (grid_width - 1);
-               int imgy = y * (img_height - 1) / (grid_height - 1);
-               vertexcolors[y * grid_width + x] = color_img[imgy * img_width + imgx];
-           }
-       }
 
     //Calc the indices for the QUADS
     int *indices = (int *) malloc(4 * (width - 1) * (height - 1) * sizeof(int));
@@ -212,21 +170,18 @@ void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img
             indices[4 * ( y * (width - 1) + x ) + 3] = y * width + x;
         }
     }
-
-    vertex *watervertices = (vertex *) malloc(width * height * sizeof(vertex));
-    CHECK_NOTNULL(watervertices);
-
+    
     rgb* watercolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watercolors);
-
+    memset(watercolors, 0, width * height * sizeof(rgb));
 
     glGenBuffers(2, &heightmap[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, heightmap[1]);
-    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(rgb), vertexcolors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(rgb), colors, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, heightmap[0]);
-    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(vertex), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(vertex), landscape, GL_STATIC_DRAW);
 
     glGenBuffers(2, &watersurface[0]);
 
@@ -234,19 +189,17 @@ void initScene(int img_width, int img_height, rgb* heightmap_img, rgb* color_img
     glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(rgb), watercolors, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
-    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(vertex), watervertices, GL_DYNAMIC_COPY);
+    glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(vertex), wave, GL_DYNAMIC_COPY);
 
     glGenBuffers(1, &indexbufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
 
-
-    initWaterSurface(width, height, vertices);
-
-    free(vertices);
     free(indices);
-    free(vertexcolors);
     free(watercolors);
+    free(landscape);
+    free(colors);
+    free(wave);
 }
 
 void animate(int v)
@@ -262,8 +215,18 @@ void animate(int v)
 
     markTime();
 
-    updateScene();
+    glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
+    vertex *watersurfacevertices = (vertex *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    CHECK_NOTNULL(watersurfacevertices);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 
+    glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
+    rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    CHECK_NOTNULL(watersurfacecolors);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+    
+    callback(watersurfacevertices, watersurfacecolors);
+    
     glutPostRedisplay();
 
     long elapsed = timeSinceMark();
