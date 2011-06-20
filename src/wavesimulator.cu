@@ -25,7 +25,8 @@ static bool validateTimestep(const char* flagname, double value)
 {
     if (value > 0 && value < 1.0f)
         { return true; }
-    printf("Invalid value for --%s: %f\n", flagname, (double)value);
+    std::cout << "Invalid value for --" << flagname << ": " 
+                << value << std::endl; 
     return false;
 }
 DEFINE_double(timestep, 0.01f, "timestep");
