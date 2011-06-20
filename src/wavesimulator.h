@@ -2,7 +2,7 @@
 
 #include "types.h"
 
-void initWaterSurface(int width, int height, vertex* heightmapvertices, float* treshholds);
+void initWaterSurface(int width, int height, vertex* heightmapvertices, float *wave, float* treshholds);
 
 void computeNext(int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors);
 

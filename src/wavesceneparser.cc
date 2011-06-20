@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void parse_wavescene(const char* filename, std::string &landscape_filename, 
+void parse_wavescene(const char* filename, std::string &landscape_filename, std::string &landscape_color_filename, 
    std::string &threshhold_filename, std::string &wave_filename, float &running_time)
 {
     std::ifstream wavescene(filename);
@@ -33,6 +33,21 @@ void parse_wavescene(const char* filename, std::string &landscape_filename,
             landscape_filename = "landscape.ppm"; 
             LOG(INFO) << "No landscape_filename definied. Landscape_filename was set to 'landscape.ppm'.";
         }
+        
+        const YAML::Node *landscape_color_node = doc.FindValue("landscape_color_filename");
+        if ( landscape_color_node != NULL )
+        {
+            (*landscape_color_node) >> landscape_color_filename;
+        }
+        else
+        {   
+            landscape_color_filename = "landscape_color.ppm"; 
+            LOG(INFO) << "No landscape_color_filename definied. Landscape_color_filename was set to 'landscape_color.ppm'.";
+        }
+        
+        
+        
+        
         const YAML::Node *threshhold_node = doc.FindValue("threshhold_filename");
         if ( threshhold_node != NULL )
         {

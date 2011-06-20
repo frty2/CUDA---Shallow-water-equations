@@ -387,7 +387,7 @@ void addWave(float* wave, int width, int height)
 }
 #endif
 
-void initWaterSurface(int width, int height, vertex* heightmapvertices, float* treshholds)
+void initWaterSurface(int width, int height, vertex *heightmapvertices, float *wave, float *treshholds)
 {
 
     if(state != UNINTIALISED)
@@ -506,7 +506,6 @@ void initWaterSurface(int width, int height, vertex* heightmapvertices, float* t
     error = cudaBindTexture2D(0, &texture_treshholds, device_treshholds, &treshholds_channeldesc, gridwidth, gridheight, grid_pitch);
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
-    float* wave  = generateWave(width, height, 0.5f, 0.5f, 0.1f, NN / 3);
     addWave(wave, width, height, grid_pitch_elements);
     free(wave);
 #else
@@ -541,7 +540,6 @@ void initWaterSurface(int width, int height, vertex* heightmapvertices, float* t
 
     initWaterSurface (device_grid_next, gridwidth, gridheight);
 
-    float* wave  = generateWave(width, height, 0.3f, 0.8f, 0.1f, NN / 2);
     addWave(wave, width, height);
     free(wave);
 #endif

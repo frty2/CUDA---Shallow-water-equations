@@ -40,20 +40,19 @@ int main(int argc, char ** argv)
     int wave_width;
     int wave_height;
     
-    // test wavescene
     float running_time;
-    std::string landscape_filename, threshholds_filename, wave_filename, colors_filename;
-    parse_wavescene("res/wavescene.yaml", landscape_filename, threshholds_filename, wave_filename, running_time);
-    colors_filename = "res/texture.ppm";
+    std::string landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, colors_filename;
+    parse_wavescene("../res/wavescene.yaml", landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
     
     readPPM(landscape_filename.c_str(), landscape_img, landscape_width, landscape_height);
     readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
-    readPPM(colors_filename.c_str(), colors_img, colors_width, colors_height);
+    readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
     
     vertex *landscape;
     float *threshholds;
     vertex *wave;
+    float *waveheights;
     rgb *colors;
 
 
@@ -62,17 +61,21 @@ int main(int argc, char ** argv)
     createHeightData(threshholds_img, threshholds_width, threshholds_height, 256, 256, threshholds);
     
     createLandscape(wave_img, wave_width, wave_height, 256, 256, wave);
+    
+    createHeightData(wave_img, wave_width, wave_height, 256, 256, waveheights);
                             
     createLandscapeColors(colors_img, colors_width, colors_height, 256, 256, colors);
+  
     
-    initWaterSurface(256, 256, landscape, threshholds);
+    initWaterSurface(256, 256, landscape, waveheights, threshholds);
 
     for(int i = 0;i < 10;i++)
         updateFunction(wave, colors);
-
+    
     free(landscape_img);
     free(threshholds_img);
     free(wave_img);
+    free(waveheights);
     free(colors_img);
     return 0;
 }
