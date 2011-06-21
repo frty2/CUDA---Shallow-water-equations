@@ -331,23 +331,23 @@ void drawBorder()
 
     glBegin(GL_QUADS);
     glVertex3f(-8.0f, 0.0f, -8.0f);
-    glVertex3f(-8.0f, 2.0f, -8.0f);
-    glVertex3f(8.0f, 2.0f, -8.0f);
+    glVertex3f(-8.0f, 3.0f, -8.0f);
+    glVertex3f(8.0f, 3.0f, -8.0f);
     glVertex3f(8.0f, 0.0f, -8.0f);
 
     glVertex3f(-8.0f, 0.0f, -8.0f);
-    glVertex3f(-8.0f, 2.0f, -8.0f);
-    glVertex3f(-8.0f, 2.0f, 8.0f);
+    glVertex3f(-8.0f, 3.0f, -8.0f);
+    glVertex3f(-8.0f, 3.0f, 8.0f);
     glVertex3f(-8.0f, 0.0f, 8.0f);
 
     glVertex3f(8.0f, 0.0f, 8.0f);
-    glVertex3f(8.0f, 2.0f, 8.0f);
-    glVertex3f(8.0f, 2.0f, -8.0f);
+    glVertex3f(8.0f, 3.0f, 8.0f);
+    glVertex3f(8.0f, 3.0f, -8.0f);
     glVertex3f(8.0f, 0.0f, -8.0f);
 
     glVertex3f(8.0f, 0.0f, 8.0f);
-    glVertex3f(8.0f, 2.0f, 8.0f);
-    glVertex3f(-8.0f, 2.0f, 8.0f);
+    glVertex3f(8.0f, 3.0f, 8.0f);
+    glVertex3f(-8.0f, 3.0f, 8.0f);
     glVertex3f(-8.0f, 0.0f, 8.0f);
     glEnd();
 }

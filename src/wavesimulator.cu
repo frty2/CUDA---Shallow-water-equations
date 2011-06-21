@@ -37,7 +37,7 @@ float timestep;
 
 const float GRAVITY = 9.83219f * 0.5f; //0.5f * Fallbeschleunigung
 
-const float NN = 0.2f;
+const float NN = 1.2f;
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
@@ -133,7 +133,7 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
     vertex v;
     v.x = x * 16.0f - 8.0f;
     v.z = y * 16.0f - 8.0f;
-    v.y = (gp.x - NN) / NN + 1.0f;
+    v.y = (gp.x - NN) * 5 + NN;
     return v;
 }
 
@@ -153,7 +153,7 @@ __host__ __device__ gridpoint reflect(char r, gridpoint center, gridpoint point,
     mult.x = 1;
     mult.y = 1 - 2 * dir;
     mult.z = -1 + 2 * dir;
-    gridpoint result = r ? point : mult * center;
+    gridpoint result = r ? mult * center : point;
     return result;
 }
 
@@ -209,7 +209,7 @@ void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, vertex* device_heig
 
         gridpoint u_center = center - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
 
-        grid2Dwrite(grid_next, gridx, gridy, pitch, r * u_center);
+        grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
 
     }
 }
@@ -224,8 +224,9 @@ __global__ void initReflectionGrid(reflection* reflections, int width, int heigh
 
     if(x < width && y < height)
     {
-        int offshore = grid2Dread(heightmap, x, y, width).y < 1.0f + NN;
-        grid2Dwrite(reflections, gridx, gridy, pitch, offshore);
+        gridpoint gp = tex2D(texture_grid, gridx, gridy);
+        int onshore = grid2Dread(heightmap, x, y, width).y >= gp.x;
+        grid2Dwrite(reflections, gridx, gridy, pitch, onshore);
     }
 }
 #endif
@@ -281,9 +282,9 @@ void addWave(gridpoint* grid, float* wave, float norm, vertex* heightmap, int wi
 
         float waveheight = grid2Dread(grid, gridx, gridy, pitch).x;
 
-        bool offshore = grid2Dread(heightmap, x, y, width).y < waveheight + 1.0f - NN;
+        waveheight += (grid2Dread(wave, x, y, width) - 1.5f) / norm;
 
-        waveheight += grid2Dread(wave, x, y, width) / norm;
+        bool offshore = grid2Dread(heightmap, x, y, width).y < waveheight;
 
         grid[ offshore * (gridx + gridy * pitch) ].x = max(waveheight, 0.0001f);
     }
@@ -331,14 +332,14 @@ void addWave(float* wave, float norm, int width, int height)
 #endif
 
 #if __GPUVERSION__
-__global__ void initWaterSurface(gridpoint *grid, int gridwidth, int gridheight, int pitch)
+__global__ void initGrid(gridpoint *grid, int gridwidth, int gridheight, int pitch)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if(x < gridwidth && y < gridheight)
 #else
-void initWaterSurface(gridpoint *grid, int gridwidth, int gridheight)
+void initGrid(gridpoint *grid, int gridwidth, int gridheight)
 {
     int pitch = gridwidth;
     for(int y = 0; y < gridheight; y++)
@@ -397,7 +398,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     int reflections_pitch_elements = reflections_pitch / sizeof(reflection);
 
     //set all entries of reflection grid to 0
-    error = cudaMemset2D(device_reflections, reflections_pitch_elements, 0, gridwidth, gridheight);
+    error = cudaMemset2D(device_reflections, reflections_pitch_elements * sizeof(reflection), 0, gridwidth * sizeof(reflection), gridheight);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
 
     //alloc pitched memory for treshhold values
@@ -406,6 +407,9 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_NOTNULL(device_treshholds);
 
     //copy the threshhold values to the device
+    /*
+     * Bug, braucht eigenen Kernel
+     */
     error = cudaMemcpy2D(device_treshholds, treshholds_pitch, treshholds, width * sizeof(float), width * sizeof(float), height, cudaMemcpyHostToDevice);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
 
@@ -449,13 +453,10 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     dim3 blocksPerGrid2(1, y1);
 
     //init grid with initial values
-    initWaterSurface <<< blocksPerGrid, threadsPerBlock>>>(device_grid, gridwidth, gridheight, grid_pitch_elements);
+    initGrid <<< blocksPerGrid, threadsPerBlock>>>(device_grid, gridwidth, gridheight, grid_pitch_elements);
 
     //init grid_next with initial values
-    initWaterSurface <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, gridwidth, gridheight, grid_pitch_elements);
-
-    //init the reflection grid
-    initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, width, height, device_heightmap, reflections_pitch_elements);
+    initGrid <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, gridwidth, gridheight, grid_pitch_elements);
 
     error = cudaThreadSynchronize();
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
@@ -465,6 +466,15 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     error = cudaBindTexture2D(0, &texture_grid, device_grid, &grid_channeldesc, gridwidth, gridheight, grid_pitch);
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
+    //add the initial wave to the grid
+    addWave(wave, 18.0f, width, height, grid_pitch_elements);
+
+    //init the reflection grid
+    initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, width, height, device_heightmap, reflections_pitch_elements);
+
+    error = cudaThreadSynchronize();
+    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
+
     //bind reflection grid to texture_reflections
     error = cudaBindTexture2D(0, &texture_reflections, device_reflections, &reflections_channeldesc, gridwidth, gridheight, reflections_pitch);
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
@@ -473,8 +483,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     error = cudaBindTexture2D(0, &texture_treshholds, device_treshholds, &treshholds_channeldesc, gridwidth, gridheight, grid_pitch);
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
-    //add the initial wave to the grid
-    addWave(wave, 6.0f / NN, width, height, grid_pitch_elements);
 #else
     size_t sizeInBytes;
 
@@ -503,11 +511,11 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     device_waves = (float *) malloc(sizeInBytes);
     CHECK_NOTNULL(device_waves);
 
-    initWaterSurface (device_grid, gridwidth, gridheight);
+    initGrid (device_grid, gridwidth, gridheight);
 
-    initWaterSurface (device_grid_next, gridwidth, gridheight);
+    initGrid (device_grid_next, gridwidth, gridheight);
 
-    addWave(wave, 6.0f / NN, width, height);
+    addWave(wave, 18.0f, width, height);
 #endif
 
     state = INITIALISED;
