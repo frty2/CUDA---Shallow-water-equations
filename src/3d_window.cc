@@ -31,7 +31,7 @@
 #define KEY_R 114
 #define KEY_F 102
 
-#define MAX_FPS 30
+#define MAX_FPS 1000
 
 #ifndef max
 #define max(a,b) (((a) > (b)) ? (a) : (b))
@@ -58,7 +58,7 @@ void drawBorder();
 
 
 int frame = 0;
-float rotationY = 0;
+float rotationY = 180;
 float rotationX = 45;
 float zoom = 10;
 

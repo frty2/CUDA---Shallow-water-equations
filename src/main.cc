@@ -64,7 +64,6 @@ int main(int argc, char ** argv)
     parse_wavescene("../res/wavescene.yaml", landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
 
     readPPM(landscape_filename.c_str(), landscape_img, landscape_width, landscape_height);
-/*    
     readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
@@ -97,6 +96,6 @@ int main(int argc, char ** argv)
     free(wave_img);
     free(waveheights);
     free(colors_img);
-*/
+
     return 0;
 }

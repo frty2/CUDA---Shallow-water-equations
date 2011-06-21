@@ -37,7 +37,7 @@ float timestep;
 
 const float GRAVITY = 9.83219f * 0.5f; //0.5f * Fallbeschleunigung
 
-const float NN = 1.2f;
+const float NN = 0.5f;
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
@@ -133,7 +133,7 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
     vertex v;
     v.x = x * 16.0f - 8.0f;
     v.z = y * 16.0f - 8.0f;
-    v.y = (gp.x - NN) * 5 + NN;
+    v.y = (gp.x - NN) * 3 + NN;
     return v;
 }
 
@@ -150,7 +150,7 @@ __host__ __device__ rgb gridpointToColor(gridpoint gp)
 __host__ __device__ gridpoint reflect(char r, gridpoint center, gridpoint point, int dir)
 {
     gridpoint mult;
-    mult.x = 1;
+    mult.x = 1.0f;
     mult.y = 1 - 2 * dir;
     mult.z = -1 + 2 * dir;
     gridpoint result = r ? mult * center : point;
@@ -202,10 +202,10 @@ void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, vertex* device_heig
         gridpoint east = grid2Dread(grid, gridx + 1, gridy, gridwidth);
 #endif
 
-        gridpoint u_south = 0.5f * ( south + center ) - 0.5f * timestep * ( G(south) - G(center) );
-        gridpoint u_north = 0.5f * ( north + center ) - 0.5f * timestep * ( G(center) - G(north) );
-        gridpoint u_west = 0.5f * ( west + center ) - 0.5f * timestep * ( F(center) - F(west) );
-        gridpoint u_east = 0.5f * ( east + center ) - 0.5f * timestep * ( F(east) - F(center) );
+        gridpoint u_south = 0.5f * ( south + center ) - timestep * ( G(south) - G(center) );
+        gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
+        gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
+        gridpoint u_east = 0.5f * ( east + center ) -  timestep * ( F(east) - F(center) );
 
         gridpoint u_center = center - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
 
@@ -467,7 +467,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
     //add the initial wave to the grid
-    addWave(wave, 18.0f, width, height, grid_pitch_elements);
+    addWave(wave, 6.0f, width, height, grid_pitch_elements);
 
     //init the reflection grid
     initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, width, height, device_heightmap, reflections_pitch_elements);
@@ -515,7 +515,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
 
     initGrid (device_grid_next, gridwidth, gridheight);
 
-    addWave(wave, 18.0f, width, height);
+    addWave(wave, 6.0f, width, height);
 #endif
 
     state = INITIALISED;
