@@ -74,50 +74,7 @@ target_link_libraries(swegpu ${YAMLCPP_LIBRARY})
 target_link_libraries(swegpu ${GLUT_LIBRARY})
 target_link_libraries(swegpu ${OPENGL_LIBRARIES})
 
-set(GPU_TEST_SRC 
-    src/maintest.cc
-    src/ppm_reader.cc
-    src/ppm_writer.cc
-    src/3d_window.cc
-    src/timing.cc
-    src/wavesimulator.cu
-    src/cudaInfo.cu
-    src/landscapecreator.cc
-    src/wavesceneparser.cc
-    )
-
-#cuda test version
-cuda_add_executable(swegputest ${GPU_TEST_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -keep)
-set_target_properties(swegputest PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
-set_target_properties(swegputest PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(swegputest ${GLOG_LIBRARY})
-target_link_libraries(swegputest ${GFLAGS_LIBRARY})
-target_link_libraries(swegputest ${YAMLCPP_LIBRARY})
-target_link_libraries(swegputest ${GLUT_LIBRARY})
-target_link_libraries(swegputest ${OPENGL_LIBRARIES})
-
-set(CPU_TEST_SRC 
-    src/maintest.cc
-    src/ppm_reader.cc
-    src/ppm_writer.cc
-    src/3d_window.cc
-    src/timing.cc
-    src/wavesimulator.cc
-    src/landscapecreator.cc
-    src/wavesceneparser.cc
-    )
-
-#test version
-add_executable(swecputest ${CPU_TEST_SRC})
-set_target_properties(swecputest PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
-set_target_properties(swecputest PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(swecputest ${GLOG_LIBRARY})
-target_link_libraries(swecputest ${GFLAGS_LIBRARY})
-target_link_libraries(swecputest ${YAMLCPP_LIBRARY})
-target_link_libraries(swecputest ${GLUT_LIBRARY})
-target_link_libraries(swecputest ${OPENGL_LIBRARIES})
-
-# common flags
+#common flags
 SET(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-long-long -Wno-variadic-macros")
 SET(CMAKE_CXX_FLAGS_RELEASE "-DNEXPENSIVE -O2 -g0")
 SET(CMAKE_CXX_FLAGS_DEBUG "-DWARNINGS -O0 -g3 -fno-inline")

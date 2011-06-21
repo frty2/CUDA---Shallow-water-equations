@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <glog/logging.h>
+#include <sstream>
 
 #include "types.h"
 #include "stdlib.h"
@@ -23,8 +24,21 @@ void readPPM(const char* filename, rgb *&image, int& width, int& height)
     std::string ppmFormat;
     ifs >> ppmFormat;
     CHECK_STREQ("P3", ppmFormat.c_str());
-
-    ifs >> width;
+    
+    std::string commentcheck;
+    
+    ifs >> commentcheck;
+    if ( '#' == commentcheck[0] )
+    {
+        char dummy[256];
+        ifs.getline(dummy,256);
+        ifs >> width;
+    }
+    else
+    {
+        std::stringstream ss(commentcheck);
+        ss >> width;
+    }
     CHECK_LT(0, width);
     ifs >> height;
     CHECK_LT(0, height);

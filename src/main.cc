@@ -12,9 +12,26 @@
 #include "wavesceneparser.h"
 #include "landscapecreator.h"
 
+int gridsize;
+
+static bool validateGridsize(const char* flagname, int value)
+{
+    if (value > 1 && value < 2<<16)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+DEFINE_int32(gridsize, 256, "gridsize");
+
+static const bool gridsize_dummy = google::RegisterFlagValidator(&FLAGS_gridsize, &validateGridsize);
+
+
+
 void updateFunction(vertex* wave_vertices, rgb* wave_colors)
 {
-    computeNext(256, 256, wave_vertices, wave_colors);
+    computeNext(gridsize, gridsize, wave_vertices, wave_colors);
 }
 
 int main(int argc, char ** argv)
@@ -23,6 +40,8 @@ int main(int argc, char ** argv)
     google::InstallFailureSignalHandler();
 
     google::ParseCommandLineFlags(&argc, &argv, true);
+    
+    gridsize=FLAGS_gridsize;
 
     rgb *landscape_img;
     int landscape_width;
@@ -45,6 +64,7 @@ int main(int argc, char ** argv)
     parse_wavescene("../res/wavescene.yaml", landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
 
     readPPM(landscape_filename.c_str(), landscape_img, landscape_width, landscape_height);
+/*    
     readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
@@ -57,25 +77,26 @@ int main(int argc, char ** argv)
 
 
 
-    createLandscape(landscape_img, landscape_width, landscape_height, 256, 256, landscape);
+    createLandscape(landscape_img, landscape_width, landscape_height, gridsize, gridsize, landscape);
 
-    createHeightData(threshholds_img, threshholds_width, threshholds_height, 256, 256, threshholds);
+    createHeightData(threshholds_img, threshholds_width, threshholds_height, gridsize, gridsize, threshholds);
 
-    createLandscape(wave_img, wave_width, wave_height, 256, 256, wave);
+    createLandscape(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
-    createHeightData(wave_img, wave_width, wave_height, 256, 256, waveheights);
+    createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
 
-    createLandscapeColors(colors_img, colors_width, colors_height, 256, 256, colors);
+    createLandscapeColors(colors_img, colors_width, colors_height, gridsize, gridsize, colors);
 
 
-    initWaterSurface(256, 256, landscape, waveheights, threshholds);
+    initWaterSurface(gridsize, gridsize, landscape, waveheights, threshholds);
 
-    createWindow(argc, argv, 800, 600, 256, 256, landscape, wave, colors, &updateFunction);
+    createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &updateFunction);
 
     free(landscape_img);
     free(threshholds_img);
     free(wave_img);
     free(waveheights);
     free(colors_img);
+*/
     return 0;
 }
