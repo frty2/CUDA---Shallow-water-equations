@@ -13,6 +13,7 @@
 #include "landscapecreator.h"
 
 int gridsize;
+int simulate;
 
 static bool validateGridsize(const char* flagname, int value)
 {
@@ -23,9 +24,20 @@ static bool validateGridsize(const char* flagname, int value)
     return false;
 }
 
-DEFINE_int32(gridsize, 256, "gridsize");
+static bool validateSimulate(const char* flagname, int value)
+{
+    if (value >= 0)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+DEFINE_int32(gridsize, 256, "resolution of the water wave.");
+DEFINE_int32(simulate, 0, "execution steps, without graphic output. (0 = with graphic output)");
 
 static const bool gridsize_dummy = google::RegisterFlagValidator(&FLAGS_gridsize, &validateGridsize);
+static const bool simulate_dummy = google::RegisterFlagValidator(&FLAGS_simulate, &validateSimulate);
 
 
 
@@ -41,7 +53,17 @@ int main(int argc, char ** argv)
 
     google::ParseCommandLineFlags(&argc, &argv, true);
     
+    // checking command line arguments
+    if (argc < 2)
+    {
+        std::cerr << "You have to specify a scene file." << std::endl;
+        return -1;
+    }
+    
+    CHECK_STRNE(argv[1], "") << "No scene file specified.";
+    
     gridsize=FLAGS_gridsize;
+    simulate=FLAGS_simulate;
 
     rgb *landscape_img;
     int landscape_width;
@@ -61,7 +83,7 @@ int main(int argc, char ** argv)
 
     float running_time;
     std::string landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, colors_filename;
-    parse_wavescene("../res/wavescene.yaml", landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
+    parse_wavescene(argv[1], landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
 
     readPPM(landscape_filename.c_str(), landscape_img, landscape_width, landscape_height);
     readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
@@ -88,8 +110,18 @@ int main(int argc, char ** argv)
 
 
     initWaterSurface(gridsize, gridsize, landscape, waveheights, threshholds);
-
-    createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &updateFunction);
+    
+    if (simulate == 0)
+    {
+        createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &updateFunction);
+    }
+    else
+    {
+        for ( int step=0; step < simulate; step++)
+        {
+            updateFunction(wave, colors);
+        }
+    }
 
     free(landscape_img);
     free(threshholds_img);
