@@ -68,12 +68,12 @@ long fps_update_time;
 void (*callback) (vertex*, rgb*) = NULL;
 
 void createWindow(int argc, char **argv, int w_width, int w_height,
-                  int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors, 
+                  int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors,
                   void (*updatefunction) (vertex*, rgb*))
 {
     callback = updatefunction;
     CHECK_NOTNULL(callback);
-    
+
     initTimer();
     window_width = w_width;
     window_height = w_height;
@@ -98,7 +98,7 @@ void paint()
 
     glPushMatrix();
     glLoadIdentity();
-    
+
     glTranslatef(0.0f, -5.0f, 0.0f);
     glTranslatef(0, -rotationX / 4.0f, -zoom);
     glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
@@ -170,7 +170,7 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
             indices[4 * ( y * (width - 1) + x ) + 3] = y * width + x;
         }
     }
-    
+
     rgb* watercolors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(watercolors);
 
@@ -223,9 +223,9 @@ void animate(int v)
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacecolors);
     glUnmapBuffer(GL_ARRAY_BUFFER);
-    
+
     callback(watersurfacevertices, watersurfacecolors);
-    
+
     glutPostRedisplay();
 
     long elapsed = timeSinceMark();

@@ -10,12 +10,12 @@ float vertexheight(rgb color)
     return color.x / 256.0f + color.y / 256.0f + color.z / 256.0f;
 }
 
-void createLandscape(rgb *img, int img_width, int img_height, 
-                            int width, int height, vertex *& vertices)
+void createLandscape(rgb *img, int img_width, int img_height,
+                     int width, int height, vertex *& vertices)
 {
-    vertices = (vertex *) malloc(width*height*sizeof(vertex));
+    vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);
-    
+
     for(int y = 0; y < height; y ++)
     {
         for(int x = 0; x < width; x ++)
@@ -31,12 +31,12 @@ void createLandscape(rgb *img, int img_width, int img_height,
     }
 }
 
-void createHeightData(rgb *img, int img_width, int img_height, 
-                            int width, int height, float *& heights)
+void createHeightData(rgb *img, int img_width, int img_height,
+                      int width, int height, float *& heights)
 {
-    heights = (float *) malloc(width*height*sizeof(float));
+    heights = (float *) malloc(width * height * sizeof(float));
     CHECK_NOTNULL(heights);
-    
+
     for(int y = 0; y < height; y ++)
     {
         for(int x = 0; x < width; x ++)
@@ -48,12 +48,12 @@ void createHeightData(rgb *img, int img_width, int img_height,
     }
 }
 
-void createLandscapeColors(rgb *img, int img_width, int img_height, 
-                            int width, int height, rgb *& colors)
+void createLandscapeColors(rgb *img, int img_width, int img_height,
+                           int width, int height, rgb *& colors)
 {
     colors = (rgb *) malloc(width * height * sizeof(rgb));
     CHECK_NOTNULL(colors);
-    
+
     for(int y = 0; y < height; y ++)
     {
         for(int x = 0; x < width; x ++)
