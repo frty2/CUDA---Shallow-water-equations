@@ -29,9 +29,22 @@ static bool validateTimestep(const char* flagname, double value)
               << value << std::endl;
     return false;
 }
-DEFINE_double(timestep, 0.01f, "timestep");
+
+static bool validateWSPF(const char* flagname, int value)
+{
+    if (value > 0)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+
+DEFINE_int32(wspf, 50, "wavesteps per frame.");
+DEFINE_double(timestep, 0.01f, "timestep between 2 wavesteps.");
 
 static const bool timestep_dummy = google::RegisterFlagValidator(&FLAGS_timestep, &validateTimestep);
+static const bool wspf_dummy = google::RegisterFlagValidator(&FLAGS_wspf, &validateWSPF);
 
 float timestep;
 
@@ -41,7 +54,7 @@ const float NN = 0.5f;
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
-const int stepsperframe = 50;
+int stepsperframe = 50;
 
 int f;
 
@@ -209,7 +222,7 @@ void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, vertex* device_heig
 
         gridpoint u_center = center - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
 
-        grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
+        grid2Dwrite(grid_next, gridx, gridy, pitch, (1-r)*u_center);
 
     }
 }
@@ -361,6 +374,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     {
         return;
     }
+    stepsperframe = FLAGS_wspf;
     timestep = FLAGS_timestep;
     int gridwidth = width + 2;
     int gridheight = height + 2;

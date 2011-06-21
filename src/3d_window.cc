@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <glog/logging.h>
+#include <gflags/gflags.h>
 #include <string>
 #include <sstream>
 #include <sys/time.h>
@@ -31,11 +32,23 @@
 #define KEY_R 114
 #define KEY_F 102
 
-#define MAX_FPS 1000
 
 #ifndef max
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
+
+static bool validateMaxFPS(const char* flagname, int value)
+{
+    if (value > 0)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+DEFINE_int32(maxfps, 30, "maximum frames per second.");
+
+static const bool maxfps_dummy = google::RegisterFlagValidator(&FLAGS_maxfps, &validateMaxFPS);
 
 GLuint heightmap[2];
 GLuint watersurface[2];
@@ -230,7 +243,7 @@ void animate(int v)
 
     long elapsed = timeSinceMark();
 
-    glutTimerFunc( max(0, 1000.0 / MAX_FPS - elapsed) , animate, 0);
+    glutTimerFunc( max(0, 1000.0 / FLAGS_maxfps - elapsed) , animate, 0);
 }
 
 void keypressed(unsigned char key, int x, int y)

@@ -1,7 +1,7 @@
 # a wavescene
 
 running_time: 40
-landscape_filename: ../res/palmisland.ppm
+landscape_filename: ../res/palmisland3.ppm
 landscape_color_filename: ../res/palmislandtexture.ppm 
 threshhold_filename: ../res/palmisland.ppm 
 wave_filename: ../res/wave.ppm
