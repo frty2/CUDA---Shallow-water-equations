@@ -128,7 +128,7 @@ void paint()
     glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, heightmap[0]);
-    glVertexPointer(3, GL_FLOAT, 12, 0);
+    glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glIndexPointer(GL_INT, 0, 0);
@@ -141,7 +141,7 @@ void paint()
     glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(rgb), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
-    glVertexPointer(3, GL_FLOAT, 12, 0);
+    glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
 
 
     glEnable(GL_BLEND);

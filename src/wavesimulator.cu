@@ -62,6 +62,7 @@ int f;
 texture<gridpoint, 2, cudaReadModeElementType> texture_grid;
 texture<char, 2, cudaReadModeElementType> texture_reflections;
 texture<float, 2, cudaReadModeElementType> texture_treshholds;
+texture<vertex, 2, cudaReadModeElementType> texture_landscape;
 
 int grid_pitch_elements;
 int treshholds_pitch_elements;
@@ -171,14 +172,14 @@ __host__ __device__ gridpoint reflect(char r, gridpoint center, gridpoint point,
 }
 
 #if __GPUVERSION__
-__global__ void simulateWaveStep(gridpoint* grid_next, vertex* device_heightmap, int width, int height, float timestep, int pitch)
+__global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, float timestep, int pitch)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if(x < width && y < height)
 #else
-void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, vertex* device_heightmap, int width, int height, float timestep)
+void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, int width, int height, float timestep)
 {
     int gridwidth = width + 2;
     int pitch = gridwidth;
@@ -228,7 +229,7 @@ void simulateWaveStep(gridpoint* grid, gridpoint* grid_next, vertex* device_heig
 }
 
 #if __GPUVERSION__
-__global__ void initReflectionGrid(reflection* reflections, int width, int height, vertex* heightmap, int pitch)
+__global__ void initReflectionGrid(reflection* reflections, int width, int height, int pitch)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -238,7 +239,7 @@ __global__ void initReflectionGrid(reflection* reflections, int width, int heigh
     if(x < width && y < height)
     {
         gridpoint gp = tex2D(texture_grid, gridx, gridy);
-        int onshore = grid2Dread(heightmap, x, y, width).y >= gp.x;
+        int onshore = tex2D(texture_landscape, x, y).y >= gp.x;
         grid2Dwrite(reflections, gridx, gridy, pitch, onshore);
     }
 }
@@ -264,11 +265,13 @@ void visualise(  gridpoint* grid, vertex* watersurfacevertices,
     {
         int gridx = x + 1;
         int gridy = y + 1;
+        
 #if __GPUVERSION__
         gridpoint gp = tex2D(texture_grid, gridx, gridy);
 #else
         gridpoint gp = grid2Dread(grid, gridx, gridy, gridwidth);
 #endif
+
         watersurfacevertices[y * width + x] = gridpointToVertex(gp, x / float(width - 1), y / float(height - 1));
         watersurfacecolors[y * width + x] = gridpointToColor(gp);
     }
@@ -276,14 +279,14 @@ void visualise(  gridpoint* grid, vertex* watersurfacevertices,
 
 
 #if __GPUVERSION__
-__global__ void addWave(gridpoint* grid, float* wave, float norm, vertex* heightmap, int width, int height, int pitch)
+__global__ void addWave(gridpoint* grid, float* wave, float norm, int width, int height, int pitch)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if(x < width && y < height)
 #else
-void addWave(gridpoint* grid, float* wave, float norm, vertex* heightmap, int width, int height)
+void addWave(gridpoint* grid, float* wave, float norm, int width, int height)
 {
     int pitch = width + 2;
     for(int y = 0; y < height; y++)
@@ -297,9 +300,13 @@ void addWave(gridpoint* grid, float* wave, float norm, vertex* heightmap, int wi
 
         waveheight += (grid2Dread(wave, x, y, width) - 1.5f) / norm;
 
-        bool offshore = grid2Dread(heightmap, x, y, width).y < waveheight;
-
+#if __GPUVERSION__
+        bool offshore = tex2D(texture_landscape, x, y).y < waveheight;
+#else
+        bool offshore = 1;
+#endif
         grid[ offshore * (gridx + gridy * pitch) ].x = max(waveheight, 0.0001f);
+
     }
 }
 
@@ -317,7 +324,7 @@ void addWave(float* wave, float norm, int width, int height, int pitch_elements)
     dim3 threadsPerBlock(BLOCKSIZE_X, BLOCKSIZE_Y);
     dim3 blocksPerGrid(x, y);
 
-    addWave <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, device_waves, norm, device_heightmap, width, height, pitch_elements);
+    addWave <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, device_waves, norm, width, height, pitch_elements);
 
     error = cudaGetLastError();
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
@@ -336,7 +343,7 @@ void addWave(float* wave, float norm, int width, int height)
 {
     size_t sizeInBytes = width * height * sizeof(float);
     memcpy(device_waves, wave, sizeInBytes);
-    addWave(device_grid_next, device_waves, norm, device_heightmap, width, height);
+    addWave(device_grid_next, device_waves, norm, width, height);
 
     gridpoint *grid_helper = device_grid;
     device_grid = device_grid_next;
@@ -429,16 +436,23 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
 
     treshholds_pitch_elements = treshholds_pitch / sizeof(float);
 
-    //alloc memory for landscape data on device
-    sizeInBytes = height * width * sizeof(vertex);
-    error = cudaMalloc(&device_heightmap, sizeInBytes);
+    //alloc pitched memory for landscape data on device
+    size_t heightmap_pitch;
+    error = cudaMallocPitch(&device_heightmap, &heightmap_pitch, width * sizeof(vertex), height);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
+    CHECK_NOTNULL(device_heightmap);
 
     // copy landscape data to device
-    error = cudaMemcpy(device_heightmap, heightmapvertices, sizeInBytes, cudaMemcpyHostToDevice);
+    error = cudaMemcpy2D(device_heightmap, heightmap_pitch, heightmapvertices, width * sizeof(vertex), width * sizeof(vertex), height, cudaMemcpyHostToDevice);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-
+    
+    // bind heightmap to texture_landscape
+    cudaChannelFormatDesc heightmap_channeldesc = cudaCreateChannelDesc<float4>();
+    error = cudaBindTexture2D(0, &texture_landscape, device_heightmap, &heightmap_channeldesc, width, height, heightmap_pitch);
+    CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
+    
     // malloc memory for watersurface vertices
+    sizeInBytes = width*height*sizeof(vertex);
     error = cudaMalloc(&device_watersurfacevertices, sizeInBytes);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
 
@@ -484,7 +498,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     addWave(wave, 6.0f, width, height, grid_pitch_elements);
 
     //init the reflection grid
-    initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, width, height, device_heightmap, reflections_pitch_elements);
+    initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, width, height, reflections_pitch_elements);
 
     error = cudaThreadSynchronize();
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
@@ -558,7 +572,7 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
     //gitter "stepsperframe" zeitschritt
     for(int x = 0; x < stepsperframe; x++)
     {
-        simulateWaveStep <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, device_heightmap, width, height, timestep, grid_pitch_elements);
+        simulateWaveStep <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, width, height, timestep, grid_pitch_elements);
 
         error = cudaThreadSynchronize();
         CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
@@ -585,7 +599,7 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
 #else
     for(int x = 0; x < stepsperframe; x++)
     {
-        simulateWaveStep(device_grid, device_grid_next, device_heightmap, width, height, timestep);
+        simulateWaveStep(device_grid, device_grid_next, width, height, timestep);
 
         gridpoint *grid_helper = device_grid;
         device_grid = device_grid_next;

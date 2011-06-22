@@ -5,7 +5,7 @@
 
 typedef uchar4 rgb;
 
-typedef float3 vertex; // x, h, z
+typedef float4 vertex; // x, h, z
 
 typedef float4 gridpoint; // h, uh, vh, empty
 
