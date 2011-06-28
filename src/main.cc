@@ -11,6 +11,7 @@
 #include "wavesimulator.h"
 #include "wavesceneparser.h"
 #include "landscapecreator.h"
+#include "landscapereader.h"
 
 int gridsize;
 int simulate;
@@ -85,11 +86,18 @@ int main(int argc, char ** argv)
     std::string landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, colors_filename;
     parse_wavescene(argv[1], landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
 
-    readPPM(landscape_filename.c_str(), landscape_img, landscape_width, landscape_height);
     readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
-
+    
+    float* landscapeheightmap;
+    int heightmapheight;
+    int heightmapwidth;
+    readASC(landscape_filename.c_str(), heightmapwidth, heightmapheight, landscapeheightmap);
+    
+    //int a = 512;
+    //fitASC("../res/cafit.asc", heightmapwidth, a, landscapeheightmap);
+    
     vertex *landscape;
     float *threshholds;
     vertex *wave;
@@ -98,11 +106,11 @@ int main(int argc, char ** argv)
 
 
 
-    createLandscape(landscape_img, landscape_width, landscape_height, gridsize, gridsize, landscape);
+    createLandscapeFloat(landscapeheightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
 
     createHeightData(threshholds_img, threshholds_width, threshholds_height, gridsize, gridsize, threshholds);
 
-    createLandscape(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
+    createLandscapeRgb(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
     createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
 
@@ -119,11 +127,11 @@ int main(int argc, char ** argv)
     {
         for ( int step=0; step < simulate; step++)
         {
-            updateFunction(wave, colors);
+           updateFunction(wave, colors);
         }
     }
 
-    free(landscape_img);
+    free(landscapeheightmap);
     free(threshholds_img);
     free(wave_img);
     free(waveheights);

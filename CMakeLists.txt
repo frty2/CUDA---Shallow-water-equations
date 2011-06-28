@@ -31,25 +31,15 @@ include_directories("src")
 configure_file(${CMAKE_SOURCE_DIR}/src/wavesimulator.cu ${CMAKE_SOURCE_DIR}/src/wavesimulator.cc COPYONLY)
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-set(CPU_SRC 
-    src/main.cc
-    src/ppm_reader.cc
-    src/ppm_writer.cc
-    src/3d_window.cc
-    src/timing.cc
-    src/wavesimulator.cc
-    src/landscapecreator.cc
-    src/wavesceneparser.cc
+set(ASC_PARSE 
+    src/main2.cc
+    src/landscapereader.cc
     )
     
-#cpu version
-add_executable(swecpu ${CPU_SRC})
-set_target_properties(swecpu PROPERTIES COMPILE_FLAGS "-D__CPUVERSION__")
-target_link_libraries(swecpu ${GLOG_LIBRARY})
-target_link_libraries(swecpu ${GFLAGS_LIBRARY})
-target_link_libraries(swecpu ${YAMLCPP_LIBRARY})
-target_link_libraries(swecpu ${GLUT_LIBRARY})
-target_link_libraries(swecpu ${OPENGL_LIBRARIES})
+#asc parser
+add_executable(asc ${ASC_PARSE})
+target_link_libraries(asc ${GLOG_LIBRARY})
+target_link_libraries(asc ${GFLAGS_LIBRARY})
 
 
 set(GPU_SRC 
@@ -62,10 +52,12 @@ set(GPU_SRC
     src/cudaInfo.cu
     src/landscapecreator.cc
     src/wavesceneparser.cc
+    src/landscapereader.cc
     )
 
 #cuda version
-cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -keep)
+set(CUDA_NVCC_FLAGS "-arch=sm_20")
+cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -use_fast_math -keep)
 set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(swegpu ${GLOG_LIBRARY})

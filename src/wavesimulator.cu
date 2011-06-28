@@ -5,7 +5,8 @@
 #include <gflags/gflags.h>
 
 #include "types.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define BLOCKSIZE_X 8
 #define BLOCKSIZE_Y 8
@@ -163,7 +164,7 @@ __host__ __device__ gridpoint reflect(char r, gridpoint center, gridpoint point,
 {
     if(r)
     {
-        //center.x = 0.0001f;
+        center.x = 0.0001f;
         center.w = point.w;
         return center;
     }

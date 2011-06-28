@@ -10,7 +10,34 @@ float vertexheight(rgb color)
     return color.x / 256.0f + color.y / 256.0f + color.z / 256.0f;
 }
 
-void createLandscape(rgb *img, int img_width, int img_height,
+float vertexheightf(float f)
+{
+    // return a value between (0,3)
+    return 1.0f;
+}
+
+void createLandscapeFloat(float *heightmap, int heightmap_width, int heightmap_height,
+                     int width, int height, vertex *& vertices)
+{
+    vertices = (vertex *) malloc(width * height * sizeof(vertex));
+    CHECK_NOTNULL(vertices);
+
+    for(int y = 0; y < height; y ++)
+    {
+        for(int x = 0; x < width; x ++)
+        {
+            int imgx = x * (heightmap_width - 1) / (width - 1);
+            int imgy = y * (heightmap_height - 1) / (height - 1);
+            vertex v;
+            v.x = x * 16.0f / (width - 1) - 8;
+            v.z = y * 16.0f / (height - 1) - 8;
+            v.y = vertexheightf(heightmap[imgy * heightmap_width + imgx]);
+            vertices[y * width + x] = v;
+        }
+    }
+}
+
+void createLandscapeRgb(rgb *img, int img_width, int img_height,
                      int width, int height, vertex *& vertices)
 {
     vertices = (vertex *) malloc(width * height * sizeof(vertex));
@@ -25,7 +52,7 @@ void createLandscape(rgb *img, int img_width, int img_height,
             vertex v;
             v.x = x * 16.0f / (width - 1) - 8;
             v.z = y * 16.0f / (height - 1) - 8;
-            v.y = v.x/20+0.4f;//vertexheight(img[imgy * img_width + imgx]);
+            v.y = vertexheight(img[imgy * img_width + imgx]);
             vertices[y * width + x] = v;
         }
     }
