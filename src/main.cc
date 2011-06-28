@@ -99,7 +99,6 @@ int main(int argc, char ** argv)
 
 
     createLandscape(landscape_img, landscape_width, landscape_height, gridsize, gridsize, landscape);
-
     createHeightData(threshholds_img, threshholds_width, threshholds_height, gridsize, gridsize, threshholds);
 
     createLandscape(wave_img, wave_width, wave_height, gridsize, gridsize, wave);

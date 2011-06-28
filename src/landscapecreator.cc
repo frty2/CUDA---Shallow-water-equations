@@ -25,7 +25,7 @@ void createLandscape(rgb *img, int img_width, int img_height,
             vertex v;
             v.x = x * 16.0f / (width - 1) - 8;
             v.z = y * 16.0f / (height - 1) - 8;
-            v.y = v.x/20+0.4f;//vertexheight(img[imgy * img_width + imgx]);
+            v.y = vertexheight(img[imgy * img_width + imgx]);
             vertices[y * width + x] = v;
         }
     }
