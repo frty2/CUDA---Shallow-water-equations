@@ -30,6 +30,15 @@ ENDIF(APPLE)
 include_directories("src")
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+set(ASC_PARSE 
+    src/main2.cc
+    src/landscapereader.cc
+    )
+    
+#asc parser
+add_executable(asc ${ASC_PARSE})
+target_link_libraries(asc ${GLOG_LIBRARY})
+target_link_libraries(asc ${GFLAGS_LIBRARY})
 
 set(GPU_SRC 
     src/main.cc
@@ -41,10 +50,12 @@ set(GPU_SRC
     src/cudaInfo.cu
     src/landscapecreator.cc
     src/wavesceneparser.cc
+    src/landscapereader.cc
     )
 
 #cuda version
-cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -arch=sm_12 -use_fast_math -keep)
+set(CUDA_NVCC_FLAGS "-arch=sm_20")
+cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -use_fast_math -keep)
 set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(swegpu ${GLOG_LIBRARY})

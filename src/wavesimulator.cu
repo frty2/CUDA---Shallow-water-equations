@@ -5,7 +5,8 @@
 #include <gflags/gflags.h>
 
 #include "types.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define BLOCKSIZE_X 8
 #define BLOCKSIZE_Y 8
