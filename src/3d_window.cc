@@ -149,7 +149,7 @@ void paint()
     //watersurface
     glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
-    glDisable(GL_BLEND);
+   glDisable(GL_BLEND);
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
