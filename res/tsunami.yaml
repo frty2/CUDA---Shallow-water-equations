@@ -1,0 +1,6 @@
+# a wavescene
+
+running_time: 40
+landscape_filename: ../res/tsunami/shore.ppm
+landscape_color_filename: ../res/landscape/texture.ppm 
+wave_filename: ../res/tsunami/tsunamiwave.ppm
