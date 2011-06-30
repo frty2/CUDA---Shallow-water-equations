@@ -54,7 +54,7 @@ set(GPU_SRC
     )
 
 #cuda version
-set(CUDA_NVCC_FLAGS "-arch=sm_20")
+set(CUDA_NVCC_FLAGS "-arch=sm_12")
 cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -use_fast_math -keep)
 set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)

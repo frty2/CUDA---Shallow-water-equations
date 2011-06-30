@@ -47,27 +47,24 @@ DEFINE_double(timestep, 0.01f, "timestep between 2 wavesteps.");
 static const bool timestep_dummy = google::RegisterFlagValidator(&FLAGS_timestep, &validateTimestep);
 static const bool wspf_dummy = google::RegisterFlagValidator(&FLAGS_wspf, &validateWSPF);
 
+const int UNINTIALISED = 0;
+const int INITIALISED = 1;
+
+int state = UNINTIALISED;
+
 float timestep;
+int stepsperframe = 50;
 
 const float GRAVITY = 9.83219f * 0.5f; //0.5f * Fallbeschleunigung
 
-const float NN = 1.2f;
-
-const int UNINTIALISED = 0;
-const int INITIALISED = 1;
-int stepsperframe = 50;
-
-int f;
-
+const float NN = 5.0f;
 
 texture<gridpoint, 2, cudaReadModeElementType> texture_grid;
-texture<char, 2, cudaReadModeElementType> texture_reflections;
 texture<float, 2, cudaReadModeElementType> texture_treshholds;
 texture<vertex, 2, cudaReadModeElementType> texture_landscape;
 
 int grid_pitch_elements;
 int treshholds_pitch_elements;
-int reflections_pitch_elements;
 cudaChannelFormatDesc grid_channeldesc;
 
 gridpoint* device_grid;
@@ -80,44 +77,50 @@ float* device_treshholds;
 float* device_waves;
 rgb* device_watersurfacecolors;
 
-reflection* device_reflections;
+#define EPSILON 0.0001f
 
-int state = UNINTIALISED;
-
-#define EPSILON 0.001f
-
-__host__ __device__ gridpoint F(gridpoint u)
+__host__ __device__ gridpoint F(gridpoint gp)
 {
-    float h4 = u.x*u.x*u.x*u.x;
-    float v = u.x+u.y/(sqrtf(h4 + max(h4, EPSILON)));
+    float h = max(0, gp.x);
+    float uh = gp.y;
+    float vh = gp.z;
+    
+    float h4 = h*h*h*h;
+    float u = sqrtf(2)*h*uh/(sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint F;
-    F.x = u.y;
-    F.y = u.y * v+ GRAVITY * u.x * u.x;
-    F.z = u.z * v;
+    F.x = u*h;
+    F.y = uh * u + GRAVITY * h * h;
+    F.z = vh * u;
     F.w = 0;
     return F;
 }
 
-__host__ __device__ gridpoint G(gridpoint u)
+__host__ __device__ gridpoint G(gridpoint gp)
 {
-    float h4 = u.x*u.x*u.x*u.x;
-    float v = sqrtf(2)*u.x+u.z/(sqrtf(h4 + max(h4, EPSILON)));
+    float h = max(0, gp.x);
+    float uh = gp.y;
+    float vh = gp.z;
+    
+    float h4 = h*h*h*h;
+    float v = sqrtf(2)*h*vh/(sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint G;
-    G.x = u.z;
-    G.y = u.y * v;
-    G.z = u.z * v + GRAVITY * u.x * u.x;
+    G.x = v*h;
+    G.y = uh * v;
+    G.z = vh * v + GRAVITY * h * h;
     G.w = 0;
     return G;
 }
 
 __host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint s, gridpoint w)
 {
+    float h = max(0, c.x);
+
     gridpoint H;
     H.x = 0;
-    H.y = -GRAVITY * c.x * (e.w-w.w);
-    H.z = -GRAVITY * c.x * (s.w-n.w);
+    H.y = -GRAVITY * h * (e.w-w.w);
+    H.z = -GRAVITY * h * (s.w-n.w);
     H.w = 0;
     return H;
 }
@@ -163,25 +166,29 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
     return x * c;
 }
 
-__host__ __device__ gridpoint reflect(gridpoint& center, gridpoint point)
+__host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
 {
-    float cor = 0.00001f;
-    float diff = point.x-cor;
-    if(diff <= 0)
+    if(r.x < 0.0f)
     {
-        //point.w = center.w+center.x;
-        point.x = cor;
-        center.x += diff;
-        diff = center.x - cor;
-        if(diff <= 0)
-        {
-            center.x = cor;
-            point.w += diff;
-        }
-        //center.x = max(0, center.x+diff);
-        //point.w = center.w + center.x;
+        l.x = 0.0f;
+        r.x = 0.0f;
+        float h = r.w - l.x - l.w - r.x - c.w;
+        c.x = max(h, 0.0f);
     }
-    return point;
+    if(l.x < 0.0f)
+    {
+        l.x = 0.0f;
+        r.x = 0.0f;
+        float h = l.w - r.x - r.w - l.x - c.w;
+        c.x = max(h, 0.0f);
+    }
+    float h = c.x;
+    float h4 = h*h*h*h;
+    float v = sqrtf(2)*h*c.y/(sqrtf(h4 + max(h4, EPSILON)));
+    float u = sqrtf(2)*h*c.z/(sqrtf(h4 + max(h4, EPSILON)));
+    
+    c.y = u*h;
+    c.z = v*h;
 }
 
 __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, float timestep, int pitch)
@@ -193,29 +200,34 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
     {
         int gridx = x + 1;
         int gridy = y + 1;
+        
         gridpoint center = tex2D(texture_grid, gridx, gridy);
-
-        center = reflect(center, center);
         
         gridpoint north = tex2D(texture_grid, gridx, gridy - 1);
-        north = reflect(center, north);
         
         gridpoint west = tex2D(texture_grid, gridx - 1, gridy);
-        west = reflect(center, west);
         
         gridpoint south = tex2D(texture_grid, gridx, gridy + 1);
-        south = reflect(center, south);
         
         gridpoint east = tex2D(texture_grid, gridx + 1, gridy);
-        east = reflect(center, east);
+        
+        fixShore(west, center, east);
+        fixShore(north, center, south);
         
         gridpoint u_south = 0.5f * ( south + center ) - timestep * ( G(south) - G(center) );
         gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
         gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
         gridpoint u_east = 0.5f * ( east + center ) - timestep * ( F(east) - F(center) );
         
-        gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep *( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
         
+        gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep *( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
+        if(u_center.x < 0)
+        {
+            u_center.x = 0.0f;
+            //u_center.y = 0.0f;
+            //u_center.z = 0.0f;
+        }
+        //u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
     }
 }
@@ -237,35 +249,25 @@ __global__ void initGrid(gridpoint *grid, int gridwidth, int gridheight, int pit
     }
 }
 
-__global__ void initReflectionGrid(reflection* reflections, int gridwidth, int gridheight, int pitch)
-{
-    int x = threadIdx.x + blockIdx.x * blockDim.x;
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if(x < gridwidth && y < gridheight)
-    {
-        gridpoint gp = tex2D(texture_grid, x, y);
-        int onshore = gp.x <= 0.0f;
-        grid2Dwrite(reflections, x, y, pitch, onshore);
-    }
-}
-
 __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
 {
+    float h = gp.x;
+    if(h < 0.1f)
+        h = -0.001f;
     vertex v;
-    v.x = x * 16.0f - 8.0f;
-    v.z = y * 16.0f - 8.0f;
-    v.y = gp.x+gp.w-0.0001f;
+    v.x = x * 20.0f - 10.0f;
+    v.z = y * 20.0f - 10.0f;
+    v.y = h+gp.w;
     return v;
 }
 
 __host__ __device__ rgb gridpointToColor(gridpoint gp)
 {
     rgb c;
-    c.x = min(20 + (gp.x+gp.w - NN) / (NN / 2) * 150.0f, 255);
-    c.y = min(40 + (gp.x+gp.w - NN) / (NN / 2) * 150.0f, 255);
-    c.z = min(100 + (gp.x+gp.w - NN) / (NN / 2) * 150.0f, 255);
-    c.w = 235;
+    c.x = min(20 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.y = min(40 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.z = min(100 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.w = 255-max(-50*gp.x+50, 0);
     return c;
 }
 
@@ -300,10 +302,8 @@ __global__ void addWave(gridpoint* grid, float* wave, float norm, int width, int
 
         float waveheight = grid2Dread(grid, gridx, gridy, pitch).x;
 
-        waveheight += (grid2Dread(wave, x, y, width) - 1.5f) / norm;
+        waveheight += (grid2Dread(wave, x, y, width) - 5.0f) / norm;
 
-        bool offshore = tex2D(texture_grid, x, y).x > 0.0f;
-        //if(offshore)
         grid[ gridx + gridy * pitch ].x = waveheight;
 
     }
@@ -350,7 +350,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     int gridheight = height + 2;
 
     size_t sizeInBytes;
-    size_t grid_pitch, reflections_pitch, treshholds_pitch;
+    size_t grid_pitch, treshholds_pitch;
     cudaError_t error;
 
     grid_channeldesc = cudaCreateChannelDesc<float4>();
@@ -372,17 +372,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(oldpitch, grid_pitch);
 
     grid_pitch_elements = grid_pitch / sizeof(gridpoint);
-
-    //alloc pitched memory for reflection grid
-    error = cudaMallocPitch(&device_reflections, &reflections_pitch, gridwidth * sizeof(reflection), gridheight);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-    CHECK_NOTNULL(device_reflections);
-
-    reflections_pitch_elements = reflections_pitch / sizeof(reflection);
-
-    //set all entries of reflection grid to 0
-    error = cudaMemset2D(device_reflections, reflections_pitch_elements * sizeof(reflection), 0, gridwidth * sizeof(reflection), gridheight);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
 
     //alloc pitched memory for treshhold values
     error = cudaMallocPitch(&device_treshholds, &treshholds_pitch, gridwidth * sizeof(float), gridheight);
@@ -457,17 +446,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
     //add the initial wave to the grid
-    addWave(wave, 10.0f, width, height, grid_pitch_elements);
-
-    //init the reflection grid
-    initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, gridwidth, gridheight, reflections_pitch_elements);
-
-    error = cudaThreadSynchronize();
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-
-    //bind reflection grid to texture_reflections
-    error = cudaBindTexture2D(0, &texture_reflections, device_reflections, &reflections_channeldesc, gridwidth, gridheight, reflections_pitch);
-    CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
+    addWave(wave, 0.5f, width, height, grid_pitch_elements);
 
     //bin the threshholds to texture_treshholds
     error = cudaBindTexture2D(0, &texture_treshholds, device_treshholds, &treshholds_channeldesc, gridwidth, gridheight, grid_pitch);
@@ -482,8 +461,6 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
     {
         return;
     }
-
-    f++;
 
     int gridwidth = width + 2;
     int gridheight = height + 2;
@@ -509,12 +486,6 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
 
         error = cudaBindTexture2D(0, &texture_grid, device_grid, &grid_channeldesc, gridwidth, gridheight, grid_pitch_elements * sizeof(gridpoint));
         CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
-        
-         //init the reflection grid
-        initReflectionGrid <<< blocksPerGrid, threadsPerBlock>>>(device_reflections, gridwidth, gridheight, reflections_pitch_elements);
-        
-        error = cudaThreadSynchronize();
-        CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
     }
     visualise <<< blocksPerGrid, threadsPerBlock >>>(device_watersurfacevertices, device_watersurfacecolors, width, height);
 

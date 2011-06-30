@@ -155,8 +155,6 @@ void paint()
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_INDEX_ARRAY);
 
-    drawBorder();
-
     glPopMatrix();
 
     drawString(5, 25, fps_text.str());
@@ -335,32 +333,4 @@ void drawString(int x, int y, const std::string &text, void *font)
     }
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
-}
-
-
-void drawBorder()
-{
-    glColor3f(1.0f, 1.0f, 1.0f);
-
-    glBegin(GL_QUADS);
-    glVertex3f(-8.0f, 0.0f, -8.0f);
-    glVertex3f(-8.0f, 3.0f, -8.0f);
-    glVertex3f(8.0f, 3.0f, -8.0f);
-    glVertex3f(8.0f, 0.0f, -8.0f);
-
-    glVertex3f(-8.0f, 0.0f, -8.0f);
-    glVertex3f(-8.0f, 3.0f, -8.0f);
-    glVertex3f(-8.0f, 3.0f, 8.0f);
-    glVertex3f(-8.0f, 0.0f, 8.0f);
-
-    glVertex3f(8.0f, 0.0f, 8.0f);
-    glVertex3f(8.0f, 3.0f, 8.0f);
-    glVertex3f(8.0f, 3.0f, -8.0f);
-    glVertex3f(8.0f, 0.0f, -8.0f);
-
-    glVertex3f(8.0f, 0.0f, 8.0f);
-    glVertex3f(8.0f, 3.0f, 8.0f);
-    glVertex3f(-8.0f, 3.0f, 8.0f);
-    glVertex3f(-8.0f, 0.0f, 8.0f);
-    glEnd();
 }

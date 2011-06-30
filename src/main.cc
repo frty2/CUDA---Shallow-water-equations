@@ -86,13 +86,10 @@ int main(int argc, char ** argv)
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
     
-    float* landscapeheightmap;
+    rgb* landscapeheightmap;
     int heightmapheight;
     int heightmapwidth;
-    readASC(landscape_filename.c_str(), heightmapwidth, heightmapheight, landscapeheightmap);
-    
-    //int a = 512;
-    //fitASC("../res/cafit.asc", heightmapwidth, a, landscapeheightmap);
+    readPPM(landscape_filename.c_str(), landscapeheightmap, heightmapwidth, heightmapheight);
     
     vertex *landscape;
     float *threshholds;
@@ -102,11 +99,11 @@ int main(int argc, char ** argv)
 
 
 
-    createLandscapeFloat(landscapeheightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+    createLandscapeRGB(landscapeheightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
 
     createHeightData(threshholds_img, threshholds_width, threshholds_height, gridsize, gridsize, threshholds);
 
-    createLandscapeRgb(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
+    createLandscapeRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
     createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
 
