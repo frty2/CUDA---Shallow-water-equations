@@ -70,19 +70,14 @@ int main(int argc, char ** argv)
     int colors_width;
     int colors_height;
 
-    rgb *threshholds_img;
-    int threshholds_width;
-    int threshholds_height;
-
     rgb *wave_img;
     int wave_width;
     int wave_height;
 
     float running_time;
-    std::string landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, colors_filename;
-    parse_wavescene(argv[1], landscape_filename, landscape_color_filename, threshholds_filename, wave_filename, running_time);
+    std::string landscape_filename, landscape_color_filename, wave_filename, colors_filename;
+    parse_wavescene(argv[1], landscape_filename, landscape_color_filename, wave_filename, running_time);
 
-    readPPM(threshholds_filename.c_str(), threshholds_img, threshholds_width, threshholds_height);
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
     
@@ -92,7 +87,7 @@ int main(int argc, char ** argv)
     readPPM(landscape_filename.c_str(), landscapeheightmap, heightmapwidth, heightmapheight);
     
     vertex *landscape;
-    float *threshholds;
+
     vertex *wave;
     float *waveheights;
     rgb *colors;
@@ -101,8 +96,6 @@ int main(int argc, char ** argv)
 
     createLandscapeRGB(landscapeheightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
 
-    createHeightData(threshholds_img, threshholds_width, threshholds_height, gridsize, gridsize, threshholds);
-
     createLandscapeRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
     createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
@@ -110,7 +103,7 @@ int main(int argc, char ** argv)
     createLandscapeColors(colors_img, colors_width, colors_height, gridsize, gridsize, colors);
 
 
-    initWaterSurface(gridsize, gridsize, landscape, waveheights, threshholds);
+    initWaterSurface(gridsize, gridsize, landscape, waveheights);
     
     if (simulate == 0)
     {
@@ -125,7 +118,6 @@ int main(int argc, char ** argv)
     }
 
     free(landscapeheightmap);
-    free(threshholds_img);
     free(wave_img);
     free(waveheights);
     free(colors_img);

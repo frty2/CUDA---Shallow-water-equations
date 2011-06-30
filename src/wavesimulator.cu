@@ -60,11 +60,9 @@ const float GRAVITY = 9.83219f * 0.5f; //0.5f * Fallbeschleunigung
 const float NN = 5.0f;
 
 texture<gridpoint, 2, cudaReadModeElementType> texture_grid;
-texture<float, 2, cudaReadModeElementType> texture_treshholds;
 texture<vertex, 2, cudaReadModeElementType> texture_landscape;
 
 int grid_pitch_elements;
-int treshholds_pitch_elements;
 cudaChannelFormatDesc grid_channeldesc;
 
 gridpoint* device_grid;
@@ -337,7 +335,7 @@ void addWave(float* wave, float norm, int width, int height, int pitch_elements)
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 }
 
-void initWaterSurface(int width, int height, vertex *heightmapvertices, float *wave, float *treshholds)
+void initWaterSurface(int width, int height, vertex *heightmapvertices, float *wave)
 {
 
     if(state != UNINTIALISED)
@@ -350,7 +348,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     int gridheight = height + 2;
 
     size_t sizeInBytes;
-    size_t grid_pitch, treshholds_pitch;
+    size_t grid_pitch;
     cudaError_t error;
 
     grid_channeldesc = cudaCreateChannelDesc<float4>();
@@ -372,20 +370,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(oldpitch, grid_pitch);
 
     grid_pitch_elements = grid_pitch / sizeof(gridpoint);
-
-    //alloc pitched memory for treshhold values
-    error = cudaMallocPitch(&device_treshholds, &treshholds_pitch, gridwidth * sizeof(float), gridheight);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-    CHECK_NOTNULL(device_treshholds);
-
-    //copy the threshhold values to the device
-    /*
-     * Bug, braucht eigenen Kernel
-     */
-    error = cudaMemcpy2D(device_treshholds, treshholds_pitch, treshholds, width * sizeof(float), width * sizeof(float), height, cudaMemcpyHostToDevice);
-    CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-
-    treshholds_pitch_elements = treshholds_pitch / sizeof(float);
 
     //alloc pitched memory for landscape data on device
     size_t heightmap_pitch;
@@ -447,10 +431,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
 
     //add the initial wave to the grid
     addWave(wave, 0.5f, width, height, grid_pitch_elements);
-
-    //bin the threshholds to texture_treshholds
-    error = cudaBindTexture2D(0, &texture_treshholds, device_treshholds, &treshholds_channeldesc, gridwidth, gridheight, grid_pitch);
-    CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
     state = INITIALISED;
 }

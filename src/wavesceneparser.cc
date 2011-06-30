@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void parse_wavescene(const char* filename, std::string &landscape_filename, std::string &landscape_color_filename,
-                     std::string &threshhold_filename, std::string &wave_filename, float &running_time)
+void parse_wavescene(const char* filename, std::string &landscape_filename, std::string &landscape_color_filename, std::string &wave_filename, float &running_time)
 {
     std::ifstream wavescene(filename);
     if ( wavescene.is_open() )
@@ -45,19 +44,6 @@ void parse_wavescene(const char* filename, std::string &landscape_filename, std:
             LOG(INFO) << "No landscape_color_filename definied. Landscape_color_filename was set to 'landscape_color.ppm'.";
         }
 
-
-
-
-        const YAML::Node *threshhold_node = doc.FindValue("threshhold_filename");
-        if ( threshhold_node != NULL )
-        {
-            (*threshhold_node) >> threshhold_filename;
-        }
-        else
-        {
-            threshhold_filename = "threshhold.ppm";
-            LOG(INFO) << "No threshhold_filename definied. Threshhold_filename was set to 'threshhold.ppm'.";
-        }
         const YAML::Node *wave_node = doc.FindValue("wave_filename");
         if ( wave_node != NULL )
         {
