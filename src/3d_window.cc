@@ -234,8 +234,9 @@ void animate(int v)
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacecolors);
     glUnmapBuffer(GL_ARRAY_BUFFER);
-
-    callback(watersurfacevertices, watersurfacecolors);
+    
+    if(frame == 1 || frame > 100)
+        callback(watersurfacevertices, watersurfacecolors);
 
     glutPostRedisplay();
 
