@@ -149,7 +149,7 @@ void paint()
     //watersurface
     glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
 
-   glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -280,20 +280,23 @@ void keypressed(unsigned char key, int x, int y)
 void initGL()
 {
     glMatrixMode(GL_PROJECTION);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
     glLoadIdentity();
     glViewport(0, 0, window_width, window_height);
     gluPerspective(45, 1.0 * window_width / window_height, 1, 1000);
+    
     glMatrixMode(GL_MODELVIEW);
-
-    glClearColor (0.0, 0.0, 0.0, 0.0);
+    glLoadIdentity();
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+    glClearColor (0.0, 0.0, 0.0, 1.0);
+    //glCullFace(GL_FRONT_AND_BACK);
 }
 
 void resize(int width, int height)
 {
     window_width = width;
     window_height = height;
+    
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0, window_width, window_height);
@@ -305,7 +308,7 @@ void initGlut(int argc, char ** argv)
 {
     glutInit(&argc, argv);
 
-    glutInitDisplayMode (GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(window_width, window_height);
     glutCreateWindow (argv[0]);
@@ -318,7 +321,6 @@ void initGlut(int argc, char ** argv)
 
 void drawString(int x, int y, const std::string &text, void *font)
 {
-
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
