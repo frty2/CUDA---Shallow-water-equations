@@ -13,12 +13,17 @@
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#define grid2Dread(array, x, y, pitch) array[(y)*pitch+x]
+
 void readASC(const char* filename, int &heightmapwidth, int &heightmapheight,float*& heightmap)
 {
     int filewidth;
     int fileheight;
-    int skipwidth;
-    int skipheight;
+
     std::ifstream ifs(filename);
     LOG_IF(FATAL, ifs.fail()) << "Failed opening file '" << filename << "'";
 
@@ -50,7 +55,6 @@ void readASC(const char* filename, int &heightmapwidth, int &heightmapheight,flo
         {
             ifs >> heightmap[x+y*dim];
         }
-        printf("%d",x);
         for(;x<filewidth;x++)
         {
             ifs >> dummy;
@@ -69,14 +73,26 @@ void fitASC(const char* filename, int &heightmapdim, int &fitdim, float*& height
     file << "cellsize      0.00027777778" << "\n";
     file << "NODATA_value  -9999" << "\n";
     
+
+    int step = max((heightmapdim - 1) / (fitdim - 1), 1);
     
     for(int y = 0; y < fitdim; y++)
     {
         for(int x = 0; x < fitdim; x++)
         {
-            int imgx = x * (heightmapdim - 1) / (fitdim - 1);
-            int imgy = y * (heightmapdim - 1) / (fitdim - 1);
-            file << heightmap[imgy * heightmapdim + imgx] << " ";
+            int imgx = x * step;
+            int imgy = y * step;
+            
+            float height = 0.0f;
+            for(int xx = 0;xx < step;xx++)
+            {
+                for(int yy = 0;yy < step;yy++)
+                {
+                    height += grid2Dread(heightmap, imgx+xx, imgy+yy, heightmapdim);
+                }
+            }
+            height = height / (step * step);
+            file << height << " ";
         }
     }
     file.close();

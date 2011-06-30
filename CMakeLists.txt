@@ -28,7 +28,6 @@ ENDIF(APPLE)
 
 
 include_directories("src")
-configure_file(${CMAKE_SOURCE_DIR}/src/wavesimulator.cu ${CMAKE_SOURCE_DIR}/src/wavesimulator.cc COPYONLY)
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(ASC_PARSE 
@@ -40,7 +39,6 @@ set(ASC_PARSE
 add_executable(asc ${ASC_PARSE})
 target_link_libraries(asc ${GLOG_LIBRARY})
 target_link_libraries(asc ${GFLAGS_LIBRARY})
-
 
 set(GPU_SRC 
     src/main.cc
@@ -56,7 +54,9 @@ set(GPU_SRC
     )
 
 #cuda version
-set(CUDA_NVCC_FLAGS "-arch=sm_20")
+
+set(CUDA_NVCC_FLAGS "-arch=sm_12")
+
 cuda_add_executable(swegpu ${GPU_SRC} OPTIONS -D__GPUVERSION__ --ptxas-options=-v -use_fast_math -keep)
 set_target_properties(swegpu PROPERTIES COMPILE_FLAGS -D__GPUVERSION__)
 set_target_properties(swegpu PROPERTIES LINKER_LANGUAGE C)
