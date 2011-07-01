@@ -155,14 +155,15 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
 
 __host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
 {
-    if(r.x < 0.0f || l.x < 0.0f || c.x < 0.0f)
+    float h = r.w - l.w - c.w;
+    if(r.x <= 0.0f || l.x <= 0.0f || c.x <= 0.0f)
     {
-        float h = r.w - l.w - c.w;
+        
         l.x = 0.0f;
         r.x = 0.0f;
         c.x = max(h, 0.0f);
     }
-    float h = c.x;
+    h = c.x;
     float h4 = h*h*h*h;
     float v = sqrtf(2)*h*c.y/(sqrtf(h4 + max(h4, EPSILON)));
     float u = sqrtf(2)*h*c.z/(sqrtf(h4 + max(h4, EPSILON)));
@@ -201,13 +202,7 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
         
         
         gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep *( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
-        if(u_center.x < 0)
-        {
-            u_center.x = 0.0f;
-            //u_center.y = 0.0f;
-            //u_center.z = 0.0f;
-        }
-        //u_center.x = max(0.0f, u_center.x);
+        u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
     }
 }
