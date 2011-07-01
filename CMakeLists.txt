@@ -31,8 +31,9 @@ include_directories("src")
 file(COPY res DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(ASC_PARSE 
-    src/main2.cc
-    src/landscapereader.cc
+    src/asc_resizer.cc
+    src/asc_reader.cc
+    src/asc_writer.cc
     )
     
 #asc parser
@@ -50,7 +51,8 @@ set(GPU_SRC
     src/cudaInfo.cu
     src/landscapecreator.cc
     src/wavesceneparser.cc
-    src/landscapereader.cc
+    src/asc_reader.cc
+    src/asc_writer.cc
     )
 
 #cuda version

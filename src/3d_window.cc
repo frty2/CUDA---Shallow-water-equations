@@ -66,14 +66,15 @@ void initGL();
 void resize();
 void animate(int v);
 void keypressed(unsigned char key, int x, int y);
+void mousepressed(int button, int state, int x, int y);
 void drawString(int x, int y, const std::string &text, void *font = GLUT_BITMAP_HELVETICA_12);
 void drawBorder();
 
 
 int frame = 0;
-float rotationY = 180;
+float rotationY = 0;
 float rotationX = 45;
-float zoom = 10;
+float zoom = 30;
 
 float fps;
 long fps_update_time;
@@ -113,10 +114,9 @@ void paint()
     glLoadIdentity();
 
     glTranslatef(0.0f, -5.0f, 0.0f);
-    glTranslatef(0, -rotationX / 4.0f, -zoom);
-    glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
 
-    glTranslatef(0.0f, 0.0f, -20.0f);
+    glTranslatef(0.0f, 0.0f, -zoom);
+    glRotatef(rotationX, 1.0f, 0.0f, 0.0f);
     glRotatef(rotationY, 0.0f, 1.0f, 0.0f);
 
 
@@ -261,11 +261,11 @@ void keypressed(unsigned char key, int x, int y)
     }
     if(key == KEY_W)
     {
-        zoom = --zoom < -10 ? -10 : zoom;
+        zoom = --zoom < 5 ? 5 : zoom;
     }
     if(key == KEY_S)
     {
-        zoom = ++zoom > 25 ? 25 : zoom;
+        zoom = ++zoom > 50 ? 50 : zoom;
     }
     if(key == KEY_R)
     {
@@ -289,7 +289,6 @@ void initGL()
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     glClearColor (0.0, 0.0, 0.0, 1.0);
-    //glCullFace(GL_FRONT_AND_BACK);
 }
 
 void resize(int width, int height)
@@ -315,6 +314,7 @@ void initGlut(int argc, char ** argv)
 
     glutDisplayFunc(paint);
     glutKeyboardFunc(keypressed);
+    glutMouseFunc(mousepressed);
     glutReshapeFunc(resize);
     glutTimerFunc(0, animate, 0);
 }

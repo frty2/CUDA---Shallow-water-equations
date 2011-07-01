@@ -79,7 +79,7 @@ rgb* device_watersurfacecolors;
 
 __host__ __device__ gridpoint F(gridpoint gp)
 {
-    float h = max(0, gp.x);
+    float h = gp.x;
     float uh = gp.y;
     float vh = gp.z;
     
@@ -96,7 +96,7 @@ __host__ __device__ gridpoint F(gridpoint gp)
 
 __host__ __device__ gridpoint G(gridpoint gp)
 {
-    float h = max(0, gp.x);
+    float h = gp.x;
     float uh = gp.y;
     float vh = gp.z;
     
@@ -113,7 +113,7 @@ __host__ __device__ gridpoint G(gridpoint gp)
 
 __host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint s, gridpoint w)
 {
-    float h = max(0, c.x);
+    float h = c.x;
 
     gridpoint H;
     H.x = 0;
@@ -166,18 +166,11 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
 
 __host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
 {
-    if(r.x < 0.0f)
+    if(r.x < 0.0f || l.x < 0.0f || c.x < 0.0f)
     {
+        float h = r.w - l.w - c.w;
         l.x = 0.0f;
         r.x = 0.0f;
-        float h = r.w - l.x - l.w - r.x - c.w;
-        c.x = max(h, 0.0f);
-    }
-    if(l.x < 0.0f)
-    {
-        l.x = 0.0f;
-        r.x = 0.0f;
-        float h = l.w - r.x - r.w - l.x - c.w;
         c.x = max(h, 0.0f);
     }
     float h = c.x;

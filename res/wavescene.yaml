@@ -1,5 +1,4 @@
 running_time: 40
 landscape_filename: ../res/ca.asc
 landscape_color_filename: ../res/wave.ppm
-threshhold_filename: ../res/wave.ppm
 wave_filename: ../res/wave.ppm

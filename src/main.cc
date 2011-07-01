@@ -11,7 +11,9 @@
 #include "wavesimulator.h"
 #include "wavesceneparser.h"
 #include "landscapecreator.h"
-#include "landscapereader.h"
+
+#include "asc_reader.h"
+#include "asc_writer.h"
 
 int gridsize;
 int simulate;
