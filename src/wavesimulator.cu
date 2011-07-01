@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define BLOCKSIZE_X 8
-#define BLOCKSIZE_Y 8
+#define BLOCKSIZE_X 16
+#define BLOCKSIZE_Y 16
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -31,21 +31,10 @@ static bool validateTimestep(const char* flagname, double value)
     return false;
 }
 
-static bool validateWSPF(const char* flagname, int value)
-{
-    if (value > 0)
-        { return true; }
-    std::cout << "Invalid value for --" << flagname << ": "
-              << value << std::endl;
-    return false;
-}
-
-
-DEFINE_int32(wspf, 50, "wavesteps per frame.");
 DEFINE_double(timestep, 0.01f, "timestep between 2 wavesteps.");
 
 static const bool timestep_dummy = google::RegisterFlagValidator(&FLAGS_timestep, &validateTimestep);
-static const bool wspf_dummy = google::RegisterFlagValidator(&FLAGS_wspf, &validateWSPF);
+
 
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
@@ -335,7 +324,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     {
         return;
     }
-    stepsperframe = FLAGS_wspf;
     timestep = FLAGS_timestep;
     int gridwidth = width + 2;
     int gridheight = height + 2;
@@ -428,7 +416,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     state = INITIALISED;
 }
 
-void computeNext(int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors)
+void computeNext(int width, int height, vertex* watersurfacevertices, rgb* watersurfacecolors, int steps)
 {
     if(state != INITIALISED)
     {
@@ -446,7 +434,7 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
     dim3 blocksPerGrid(x, y);
 
     //gitter "stepsperframe" zeitschritt
-    for(int x = 0; x < stepsperframe; x++)
+    for(int x = 0; x < steps; x++)
     {
         simulateWaveStep <<< blocksPerGrid, threadsPerBlock>>>(device_grid_next, width, height, timestep, grid_pitch_elements);
 

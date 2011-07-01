@@ -66,7 +66,6 @@ void initGL();
 void resize();
 void animate(int v);
 void keypressed(unsigned char key, int x, int y);
-void mousepressed(int button, int state, int x, int y);
 void drawString(int x, int y, const std::string &text, void *font = GLUT_BITMAP_HELVETICA_12);
 void drawBorder();
 
@@ -314,7 +313,6 @@ void initGlut(int argc, char ** argv)
 
     glutDisplayFunc(paint);
     glutKeyboardFunc(keypressed);
-    glutMouseFunc(mousepressed);
     glutReshapeFunc(resize);
     glutTimerFunc(0, animate, 0);
 }

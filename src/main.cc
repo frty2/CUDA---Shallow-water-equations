@@ -14,9 +14,19 @@
 
 #include "asc_reader.h"
 #include "asc_writer.h"
+#include "timing.h"
 
 int gridsize;
 int simulate;
+
+static bool validateWSPF(const char* flagname, int value)
+{
+    if (value > 0)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
 
 static bool validateGridsize(const char* flagname, int value)
 {
@@ -38,15 +48,18 @@ static bool validateSimulate(const char* flagname, int value)
 
 DEFINE_int32(gridsize, 256, "resolution of the water wave.");
 DEFINE_int32(simulate, 0, "execution steps, without graphic output. (0 = with graphic output)");
+DEFINE_int32(wspf, 50, "wavesteps per frame.");
+DEFINE_int32(kernelflops, 0, "Flops per kernel");
 
 static const bool gridsize_dummy = google::RegisterFlagValidator(&FLAGS_gridsize, &validateGridsize);
 static const bool simulate_dummy = google::RegisterFlagValidator(&FLAGS_simulate, &validateSimulate);
+static const bool wspf_dummy = google::RegisterFlagValidator(&FLAGS_wspf, &validateWSPF);
 
-
+int stepperframe;
 
 void updateFunction(vertex* wave_vertices, rgb* wave_colors)
 {
-    computeNext(gridsize, gridsize, wave_vertices, wave_colors);
+    computeNext(gridsize, gridsize, wave_vertices, wave_colors, stepperframe);
 }
 
 int main(int argc, char ** argv)
@@ -67,6 +80,8 @@ int main(int argc, char ** argv)
     
     gridsize=FLAGS_gridsize;
     simulate=FLAGS_simulate;
+    stepperframe = FLAGS_wspf;
+    int kernelflops = FLAGS_kernelflops;
 
     rgb *colors_img;
     int colors_width;
@@ -113,10 +128,26 @@ int main(int argc, char ** argv)
     }
     else
     {
+        initTimer();
         for ( int step=0; step < simulate; step++)
         {
            updateFunction(wave, colors);
         }
+        float runtime = timeSinceInit() / 1000.0f;
+        
+        long kernelcalls = simulate*stepperframe;
+        long threads = gridsize*gridsize;
+        long flops = kernelcalls*threads*kernelflops;
+        
+        std::cout << "Gridsize:" << gridsize << "x" << gridsize << std::endl;
+        std::cout << "Launched the main kernel " << kernelcalls << " times." << std::endl;
+        printf("Execution time: %2.4fs\n", runtime);
+        if(flops > 0)
+        {
+            std::cout << "Total computed flops: " << flops << std::endl;
+            printf("Speed: %6.2f GFlop/s\n", flops/runtime/1000000000);
+        }
+        
     }
 
     free(landscapeheightmap);
