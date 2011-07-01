@@ -156,7 +156,7 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
 __host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
 {
     float h = r.w - l.w - c.w;
-    if(r.x <= 0.0f || l.x <= 0.0f || c.x <= 0.0f)
+    if(r.x < 0.0f || l.x < 0.0f || c.x < 0.0f)
     {
         
         l.x = 0.0f;
@@ -423,8 +423,8 @@ void computeNext(int width, int height, vertex* watersurfacevertices, rgb* water
 
     cudaError_t error;
     // make dimension
-    int x = (gridwidth + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
-    int y = (gridheight + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
+    int x = (width + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
+    int y = (height + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
     dim3 threadsPerBlock(BLOCKSIZE_X, BLOCKSIZE_Y);
     dim3 blocksPerGrid(x, y);
 
