@@ -29,23 +29,23 @@ void writeASC(const char* filename, int &heightmapdim, int &fitdim, float*& heig
     file << "yllcorner     36.99986111111" << "\n";
     file << "cellsize      0.00027777778" << "\n";
     file << "NODATA_value  -9999" << "\n";
-    
+
 
     int step = max((heightmapdim - 1) / (fitdim - 1), 1);
-    
+
     for(int y = 0; y < fitdim; y++)
     {
         for(int x = 0; x < fitdim; x++)
         {
             int imgx = x * step;
             int imgy = y * step;
-            
+
             float height = 0.0f;
-            for(int xx = 0;xx < step;xx++)
+            for(int xx = 0; xx < step; xx++)
             {
-                for(int yy = 0;yy < step;yy++)
+                for(int yy = 0; yy < step; yy++)
                 {
-                    height += grid2Dread(heightmap, imgx+xx, imgy+yy, heightmapdim);
+                    height += grid2Dread(heightmap, imgx + xx, imgy + yy, heightmapdim);
                 }
             }
             height = height / (step * step);

@@ -20,7 +20,7 @@
 
 #define grid2Dread(array, x, y, pitch) array[(y)*pitch+x]
 
-void readASC(const char* filename, int &heightmapwidth, int &heightmapheight,float*& heightmap)
+void readASC(const char* filename, int &heightmapwidth, int &heightmapheight, float*& heightmap)
 {
     int filewidth;
     int fileheight;
@@ -32,34 +32,34 @@ void readASC(const char* filename, int &heightmapwidth, int &heightmapheight,flo
     ifs >> ncols;
     CHECK_STREQ("ncols", ncols.c_str());
     ifs >> filewidth;
-    
+
     std::string nrows;
     ifs >> nrows;
     CHECK_STREQ("nrows", nrows.c_str());
     ifs >> fileheight;
-      
+
     std::string dummy;
     // skip next 8 entries
-    for(int skip=0;skip<8;skip++)
-        ifs >> dummy;
-    
-    
-    int dim = min(fileheight,filewidth);
-    heightmapwidth=dim;
-    heightmapheight=dim;
-    heightmap = (float*)malloc(dim*dim*sizeof(float));
+    for(int skip = 0; skip < 8; skip++)
+        { ifs >> dummy; }
 
-    for(int y=0;y<dim;y++)
+
+    int dim = min(fileheight, filewidth);
+    heightmapwidth = dim;
+    heightmapheight = dim;
+    heightmap = (float*)malloc(dim * dim * sizeof(float));
+
+    for(int y = 0; y < dim; y++)
     {
         int x;
-        for(x=0;x<dim;x++)
+        for(x = 0; x < dim; x++)
         {
-            ifs >> heightmap[x+y*dim];
+            ifs >> heightmap[x + y * dim];
         }
-        for(;x<filewidth;x++)
+        for(; x < filewidth; x++)
         {
             ifs >> dummy;
         }
     }
-    ifs.close();   
+    ifs.close();
 }

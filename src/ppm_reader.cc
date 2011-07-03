@@ -18,14 +18,14 @@ void readPPM(const char* filename, rgb *&image, int& width, int& height)
     std::string ppmFormat;
     ifs >> ppmFormat;
     CHECK_STREQ("P3", ppmFormat.c_str());
-    
+
     std::string commentcheck;
-    
+
     ifs >> commentcheck;
     if ( '#' == commentcheck[0] )
     {
         char dummy[256];
-        ifs.getline(dummy,256);
+        ifs.getline(dummy, 256);
         ifs >> width;
     }
     else

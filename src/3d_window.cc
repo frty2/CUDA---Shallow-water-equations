@@ -31,6 +31,7 @@
 #define KEY_S 115
 #define KEY_R 114
 #define KEY_F 102
+#define KEY_X 120
 
 
 #ifndef max
@@ -78,14 +79,23 @@ float zoom = 30;
 float fps;
 long fps_update_time;
 
-void (*callback) (vertex*, rgb*) = NULL;
+void (*update) (vertex*, rgb*) = NULL;
+void (*restart) () = NULL;
+void (*shutdown) () = NULL;
 
 void createWindow(int argc, char **argv, int w_width, int w_height,
                   int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors,
-                  void (*updatefunction) (vertex*, rgb*))
+                  void (*updatefunction) (vertex*, rgb*),
+                  void (*restartfunction) (),
+                  void (*shutdownfunction) ())
 {
-    callback = updatefunction;
-    CHECK_NOTNULL(callback);
+    update = updatefunction;
+    restart = restartfunction;
+    shutdown = shutdownfunction;
+
+    CHECK_NOTNULL(update);
+    CHECK_NOTNULL(restart);
+    CHECK_NOTNULL(shutdown);
 
     initTimer();
     window_width = w_width;
@@ -206,9 +216,6 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
 
     free(indices);
     free(watercolors);
-    free(landscape);
-    free(colors);
-    free(wave);
 }
 
 void animate(int v)
@@ -233,9 +240,9 @@ void animate(int v)
     rgb *watersurfacecolors = (rgb *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     CHECK_NOTNULL(watersurfacecolors);
     glUnmapBuffer(GL_ARRAY_BUFFER);
-    
+
     if(frame == 1 || frame > 100)
-        callback(watersurfacevertices, watersurfacecolors);
+        { update(watersurfacevertices, watersurfacecolors); }
 
     glutPostRedisplay();
 
@@ -248,7 +255,12 @@ void keypressed(unsigned char key, int x, int y)
 {
     if(key == ESC)
     {
-        exit(0);
+        shutdown();
+    }
+    if(key == KEY_X)
+    {
+        frame = 0;
+        restart();
     }
     if(key == KEY_A)
     {
@@ -282,7 +294,7 @@ void initGL()
     glLoadIdentity();
     glViewport(0, 0, window_width, window_height);
     gluPerspective(45, 1.0 * window_width / window_height, 1, 1000);
-    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glDepthFunc(GL_LESS);
@@ -294,7 +306,7 @@ void resize(int width, int height)
 {
     window_width = width;
     window_height = height;
-    
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0, window_width, window_height);
@@ -305,7 +317,6 @@ void resize(int width, int height)
 void initGlut(int argc, char ** argv)
 {
     glutInit(&argc, argv);
-
     glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(window_width, window_height);

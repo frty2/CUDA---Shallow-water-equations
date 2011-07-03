@@ -7,7 +7,7 @@
 
 float vertexheight(rgb color)
 {
-    return ((color.x / 255.0f + color.y / 255.0f + color.z / 255.0f)/1.5f-1.0f)*2.0f+5.0f;;
+    return ((color.x / 255.0f + color.y / 255.0f + color.z / 255.0f) / 1.5f - 1.0f) * 2.0f + 5.0f;;
 }
 
 float vertexheightf(float f)
@@ -16,7 +16,7 @@ float vertexheightf(float f)
 }
 
 void createLandscapeFloat(float *heightmap, int heightmap_width, int heightmap_height,
-                     int width, int height, vertex *& vertices)
+                          int width, int height, vertex *& vertices)
 {
     vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);
@@ -37,7 +37,7 @@ void createLandscapeFloat(float *heightmap, int heightmap_width, int heightmap_h
 }
 
 void createLandscapeRGB(rgb *img, int img_width, int img_height,
-                     int width, int height, vertex *& vertices)
+                        int width, int height, vertex *& vertices)
 {
     vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);

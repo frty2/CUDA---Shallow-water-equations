@@ -11,13 +11,9 @@
 #include "wavesimulator.h"
 #include "wavesceneparser.h"
 #include "landscapecreator.h"
-
 #include "asc_reader.h"
 #include "asc_writer.h"
 #include "timing.h"
-
-int gridsize;
-int simulate;
 
 static bool validateWSPF(const char* flagname, int value)
 {
@@ -30,7 +26,7 @@ static bool validateWSPF(const char* flagname, int value)
 
 static bool validateGridsize(const char* flagname, int value)
 {
-    if (value > 1 && value < 2<<16)
+    if (value > 1 && value < 2 << 16)
         { return true; }
     std::cout << "Invalid value for --" << flagname << ": "
               << value << std::endl;
@@ -55,33 +51,100 @@ static const bool gridsize_dummy = google::RegisterFlagValidator(&FLAGS_gridsize
 static const bool simulate_dummy = google::RegisterFlagValidator(&FLAGS_simulate, &validateSimulate);
 static const bool wspf_dummy = google::RegisterFlagValidator(&FLAGS_wspf, &validateWSPF);
 
+int gridsize;
+int simulate;
 int stepperframe;
+int kernelflops;
 
-void updateFunction(vertex* wave_vertices, rgb* wave_colors)
+vertex *landscape;
+vertex *wave;
+float *waveheights;
+rgb *colors;
+
+int argc;
+char ** argv;
+
+void update(vertex* wave_vertices, rgb* wave_colors)
 {
     computeNext(gridsize, gridsize, wave_vertices, wave_colors, stepperframe);
 }
 
-int main(int argc, char ** argv)
+void shutdown()
 {
+    destroyWaterSurface();
+    free(landscape);
+    free(wave);
+    free(waveheights);
+    free(colors);
+    exit(0);
+}
+
+void restart()
+{
+    destroyWaterSurface();
+    initWaterSurface(gridsize, gridsize, landscape, waveheights);
+}
+
+void start()
+{
+    initWaterSurface(gridsize, gridsize, landscape, waveheights);
+
+    if (simulate == 0)
+    {
+        createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &update, &restart, &shutdown);
+    }
+    else
+    {
+        initTimer();
+        for ( int step = 0; step < simulate; step++)
+        {
+            update(wave, colors);
+        }
+        float runtime = timeSinceInit() / 1000.0f;
+
+        long kernelcalls = simulate * stepperframe;
+        long threads = gridsize * gridsize;
+        long flops = kernelcalls * threads * kernelflops;
+
+        std::cout << "Gridsize:" << gridsize << "x" << gridsize << std::endl;
+        std::cout << "Launched the main kernel " << kernelcalls << " times." << std::endl;
+        printf("Execution time: %2.4fs\n", runtime);
+        if(flops > 0)
+        {
+            std::cout << "Total computed flops: " << flops << std::endl;
+            printf("Speed: %6.2f GFlop/s\n", flops / runtime / 1000000000);
+        }
+
+    }
+}
+
+int main(int ac, char ** av)
+{
+    argc = ac;
+    argv = av;
     google::InitGoogleLogging(argv[0]);
     google::InstallFailureSignalHandler();
 
     google::ParseCommandLineFlags(&argc, &argv, true);
-    
+
+    gridsize = FLAGS_gridsize;
+    simulate = FLAGS_simulate;
+    stepperframe = FLAGS_wspf;
+    kernelflops = FLAGS_kernelflops;
+
     // checking command line arguments
     if (argc < 2)
     {
         std::cerr << "You have to specify a scene file." << std::endl;
         return -1;
     }
-    
+
     CHECK_STRNE(argv[1], "") << "No scene file specified.";
-    
-    gridsize=FLAGS_gridsize;
-    simulate=FLAGS_simulate;
-    stepperframe = FLAGS_wspf;
-    int kernelflops = FLAGS_kernelflops;
+
+    float running_time;
+    std::string landscape_filename, landscape_color_filename, wave_filename, colors_filename;
+    parse_wavescene(argv[1], landscape_filename, landscape_color_filename, wave_filename, running_time);
+
 
     rgb *colors_img;
     int colors_width;
@@ -91,27 +154,16 @@ int main(int argc, char ** argv)
     int wave_width;
     int wave_height;
 
-    float running_time;
-    std::string landscape_filename, landscape_color_filename, wave_filename, colors_filename;
-    parse_wavescene(argv[1], landscape_filename, landscape_color_filename, wave_filename, running_time);
+    rgb* landscape_img;
+    int heightmapheight;
+    int heightmapwidth;
+
 
     readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
-    
-    rgb* landscapeheightmap;
-    int heightmapheight;
-    int heightmapwidth;
-    readPPM(landscape_filename.c_str(), landscapeheightmap, heightmapwidth, heightmapheight);
-    
-    vertex *landscape;
+    readPPM(landscape_filename.c_str(), landscape_img, heightmapwidth, heightmapheight);
 
-    vertex *wave;
-    float *waveheights;
-    rgb *colors;
-
-
-
-    createLandscapeRGB(landscapeheightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+    createLandscapeRGB(landscape_img, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
 
     createLandscapeRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
@@ -119,41 +171,11 @@ int main(int argc, char ** argv)
 
     createLandscapeColors(colors_img, colors_width, colors_height, gridsize, gridsize, colors);
 
-
-    initWaterSurface(gridsize, gridsize, landscape, waveheights);
-    
-    if (simulate == 0)
-    {
-        createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &updateFunction);
-    }
-    else
-    {
-        initTimer();
-        for ( int step=0; step < simulate; step++)
-        {
-           updateFunction(wave, colors);
-        }
-        float runtime = timeSinceInit() / 1000.0f;
-        
-        long kernelcalls = simulate*stepperframe;
-        long threads = gridsize*gridsize;
-        long flops = kernelcalls*threads*kernelflops;
-        
-        std::cout << "Gridsize:" << gridsize << "x" << gridsize << std::endl;
-        std::cout << "Launched the main kernel " << kernelcalls << " times." << std::endl;
-        printf("Execution time: %2.4fs\n", runtime);
-        if(flops > 0)
-        {
-            std::cout << "Total computed flops: " << flops << std::endl;
-            printf("Speed: %6.2f GFlop/s\n", flops/runtime/1000000000);
-        }
-        
-    }
-
-    free(landscapeheightmap);
-    free(wave_img);
-    free(waveheights);
     free(colors_img);
+    free(wave_img);
+    free(landscape_img);
+
+    start();
 
     return 0;
 }

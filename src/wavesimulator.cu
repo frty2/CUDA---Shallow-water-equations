@@ -71,12 +71,12 @@ __host__ __device__ gridpoint F(gridpoint gp)
     float h = gp.x;
     float uh = gp.y;
     float vh = gp.z;
-    
-    float h4 = h*h*h*h;
-    float u = sqrtf(2)*h*uh/(sqrtf(h4 + max(h4, EPSILON)));
+
+    float h4 = h * h * h * h;
+    float u = sqrtf(2) * h * uh / (sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint F;
-    F.x = u*h;
+    F.x = u * h;
     F.y = uh * u + GRAVITY * h * h;
     F.z = vh * u;
     F.w = 0;
@@ -88,12 +88,12 @@ __host__ __device__ gridpoint G(gridpoint gp)
     float h = gp.x;
     float uh = gp.y;
     float vh = gp.z;
-    
-    float h4 = h*h*h*h;
-    float v = sqrtf(2)*h*vh/(sqrtf(h4 + max(h4, EPSILON)));
+
+    float h4 = h * h * h * h;
+    float v = sqrtf(2) * h * vh / (sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint G;
-    G.x = v*h;
+    G.x = v * h;
     G.y = uh * v;
     G.z = vh * v + GRAVITY * h * h;
     G.w = 0;
@@ -106,8 +106,8 @@ __host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint
 
     gridpoint H;
     H.x = 0;
-    H.y = -GRAVITY * h * (e.w-w.w);
-    H.z = -GRAVITY * h * (s.w-n.w);
+    H.y = -GRAVITY * h * (e.w - w.w);
+    H.z = -GRAVITY * h * (s.w - n.w);
     H.w = 0;
     return H;
 }
@@ -155,21 +155,21 @@ __host__ __device__ gridpoint operator *(const float& c, const gridpoint& x)
 
 __host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
 {
-    float h = r.w - l.w - c.w;
+
     if(r.x < 0.0f || l.x < 0.0f || c.x < 0.0f)
     {
-        
+        c.x = c.x + l.x + r.x;
+        c.x = max(0, c.x);
         l.x = 0.0f;
         r.x = 0.0f;
-        c.x = max(h, 0.0f);
     }
-    h = c.x;
-    float h4 = h*h*h*h;
-    float v = sqrtf(2)*h*c.y/(sqrtf(h4 + max(h4, EPSILON)));
-    float u = sqrtf(2)*h*c.z/(sqrtf(h4 + max(h4, EPSILON)));
-    
-    c.y = u*h;
-    c.z = v*h;
+    float h = c.x;
+    float h4 = h * h * h * h;
+    float v = sqrtf(2) * h * c.y / (sqrtf(h4 + max(h4, EPSILON)));
+    float u = sqrtf(2) * h * c.z / (sqrtf(h4 + max(h4, EPSILON)));
+
+    c.y = u * h;
+    c.z = v * h;
 }
 
 __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, float timestep, int pitch)
@@ -181,27 +181,27 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
     {
         int gridx = x + 1;
         int gridy = y + 1;
-        
+
         gridpoint center = tex2D(texture_grid, gridx, gridy);
-        
+
         gridpoint north = tex2D(texture_grid, gridx, gridy - 1);
-        
+
         gridpoint west = tex2D(texture_grid, gridx - 1, gridy);
-        
+
         gridpoint south = tex2D(texture_grid, gridx, gridy + 1);
-        
+
         gridpoint east = tex2D(texture_grid, gridx + 1, gridy);
-        
+
         fixShore(west, center, east);
         fixShore(north, center, south);
-        
+
         gridpoint u_south = 0.5f * ( south + center ) - timestep * ( G(south) - G(center) );
         gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
         gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
         gridpoint u_east = 0.5f * ( east + center ) - timestep * ( F(east) - F(center) );
-        
-        
-        gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep *( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
+
+
+        gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
         u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
     }
@@ -213,10 +213,10 @@ __global__ void initGrid(gridpoint *grid, int gridwidth, int gridheight, int pit
     int y = threadIdx.y + blockIdx.y * blockDim.y;
     if(x < gridwidth && y < gridheight)
     {
-        float a = tex2D(texture_landscape, x-1, y-1).y;
-        
+        float a = tex2D(texture_landscape, x - 1, y - 1).y;
+
         gridpoint gp;
-        gp.x = max(NN-a, 0.0f);
+        gp.x = max(NN - a, 0.0f);
         gp.y = 0.0f;
         gp.z = 0.0f;
         gp.w = a;
@@ -228,21 +228,21 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
 {
     float h = gp.x;
     if(h < 0.1f)
-        h = -0.001f;
+        { h = -0.001f; }
     vertex v;
     v.x = x * 20.0f - 10.0f;
     v.z = y * 20.0f - 10.0f;
-    v.y = h+gp.w;
+    v.y = h + gp.w;
     return v;
 }
 
 __host__ __device__ rgb gridpointToColor(gridpoint gp)
 {
     rgb c;
-    c.x = min(20 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
-    c.y = min(40 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
-    c.z = min(100 + (gp.x+gp.w - NN) / (NN / 10) * 150.0f, 255);
-    c.w = 255-max(-50*gp.x+50, 0);
+    c.x = min(20 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.y = min(40 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.z = min(100 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.w = 255 - max(-50 * gp.x + 50, 0);
     return c;
 }
 
@@ -256,7 +256,7 @@ __global__ void visualise(vertex* watersurfacevertices,
     {
         int gridx = x + 1;
         int gridy = y + 1;
-        
+
         gridpoint gp = tex2D(texture_grid, gridx, gridy);
 
         watersurfacevertices[y * width + x] = gridpointToVertex(gp, x / float(width - 1), y / float(height - 1));
@@ -356,14 +356,14 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     // copy landscape data to device
     error = cudaMemcpy2D(device_heightmap, heightmap_pitch, heightmapvertices, width * sizeof(vertex), width * sizeof(vertex), height, cudaMemcpyHostToDevice);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
-    
+
     // bind heightmap to texture_landscape
     cudaChannelFormatDesc heightmap_channeldesc = cudaCreateChannelDesc<float4>();
     error = cudaBindTexture2D(0, &texture_landscape, device_heightmap, &heightmap_channeldesc, width, height, heightmap_pitch);
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
-    
+
     // malloc memory for watersurface vertices
-    sizeInBytes = width*height*sizeof(vertex);
+    sizeInBytes = width * height * sizeof(vertex);
     error = cudaMalloc(&device_watersurfacevertices, sizeInBytes);
     CHECK_EQ(cudaSuccess, error) << "Error: " << cudaGetErrorString(error);
 
@@ -463,6 +463,16 @@ void destroyWaterSurface()
     {
         return;
     }
+    cudaUnbindTexture(texture_grid);
+    cudaUnbindTexture(texture_landscape);
+    cudaFree(device_grid);
+    cudaFree(device_grid_next);
 
+    cudaFree(device_heightmap);
+    cudaFree(device_watersurfacevertices);
+    cudaFree(device_treshholds);
+
+    cudaFree(device_waves);
+    cudaFree(device_watersurfacecolors);
     state = UNINTIALISED;
 }
