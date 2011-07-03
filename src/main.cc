@@ -91,7 +91,7 @@ void start()
 
     if (simulate == 0)
     {
-        createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &update, &restart, &shutdown);
+        createWindow(argc, argv, 800, 600, gridsize, gridsize, landscape, wave, colors, &update, &restart, &shutdown, stepperframe, kernelflops);
     }
     else
     {

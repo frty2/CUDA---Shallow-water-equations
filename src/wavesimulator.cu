@@ -59,7 +59,6 @@ gridpoint* device_grid_next;
 
 vertex* device_heightmap;
 vertex* device_watersurfacevertices;
-float* device_treshholds;
 
 float* device_waves;
 rgb* device_watersurfacecolors;
@@ -239,9 +238,9 @@ __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
 __host__ __device__ rgb gridpointToColor(gridpoint gp)
 {
     rgb c;
-    c.x = min(20 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
-    c.y = min(40 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
-    c.z = min(100 + (gp.x + gp.w - NN) / (NN / 10) * 150.0f, 255);
+    c.x = min(20 + (gp.x + gp.w - NN) * 500.0f, 255);
+    c.y = min(40 + (gp.x + gp.w - NN) * 500.0f, 255);
+    c.z = min(100 + (gp.x + gp.w - NN) * 500.0f, 255);
     c.w = 255 - max(-50 * gp.x + 50, 0);
     return c;
 }
@@ -470,7 +469,6 @@ void destroyWaterSurface()
 
     cudaFree(device_heightmap);
     cudaFree(device_watersurfacevertices);
-    cudaFree(device_treshholds);
 
     cudaFree(device_waves);
     cudaFree(device_watersurfacecolors);

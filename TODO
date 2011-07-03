@@ -1,9 +1,0 @@
-# Addition, Subtraktion, Skalarmultiplikation float3 (__host__ __device__) x
-
-# Funktionen U, F, G ( bspw. float3 U(float h, velocity v) ) x
-
-# Grundgerüst für Cuda( Malloc, Copy, Config, Start, Backcopy ) x
-
-# Timerclass x
-
-# Cuda Infoclass x

@@ -32,6 +32,8 @@
 #define KEY_R 114
 #define KEY_F 102
 #define KEY_X 120
+#define KEY_M 109
+#define KEY_H 104
 
 
 #ifndef max
@@ -67,7 +69,7 @@ void initGL();
 void resize();
 void animate(int v);
 void keypressed(unsigned char key, int x, int y);
-void drawString(int x, int y, const std::string &text, void *font = GLUT_BITMAP_HELVETICA_12);
+void drawString(int x, int y, const std::string &text, void *font = GLUT_BITMAP_HELVETICA_18);
 void drawBorder();
 
 
@@ -76,6 +78,16 @@ float rotationY = 0;
 float rotationX = 45;
 float zoom = 30;
 
+const int SURFACE_MODE = 0;
+const int WIREFRAME_MODE = 1;
+const int POINT_MODE = 2;
+
+const int MAXMODE = 2;
+
+int mode = SURFACE_MODE;
+bool show_landscape = true;
+
+int wavesteps_, kernelflops_;
 float fps;
 long fps_update_time;
 
@@ -83,15 +95,21 @@ void (*update) (vertex*, rgb*) = NULL;
 void (*restart) () = NULL;
 void (*shutdown) () = NULL;
 
+long gpumem = 0, memtrans = 0;
+
 void createWindow(int argc, char **argv, int w_width, int w_height,
                   int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors,
                   void (*updatefunction) (vertex*, rgb*),
                   void (*restartfunction) (),
-                  void (*shutdownfunction) ())
+                  void (*shutdownfunction) (), 
+                  int ws, int kf)
 {
     update = updatefunction;
     restart = restartfunction;
     shutdown = shutdownfunction;
+    
+    wavesteps_ = ws;
+    kernelflops_ = kf;
 
     CHECK_NOTNULL(update);
     CHECK_NOTNULL(restart);
@@ -114,9 +132,7 @@ void paint()
     frame++;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    std::stringstream fps_text;
-
-    fps_text << "FPS: " << fps << " Frames total: " << frame;
+    
     glMatrixMode(GL_MODELVIEW);
 
     glPushMatrix();
@@ -143,7 +159,10 @@ void paint()
     glIndexPointer(GL_INT, 0, 0);
 
     //underground heightmap
-    glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    if(show_landscape)
+    {
+        glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+    }
 
 
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[1]);
@@ -152,13 +171,24 @@ void paint()
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
     glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
 
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //watersurface
-    glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
-
-    glDisable(GL_BLEND);
+    switch(mode)
+    {
+        case SURFACE_MODE:
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+            glDisable(GL_BLEND);
+            break;
+        case WIREFRAME_MODE:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+            break;
+        case POINT_MODE:
+            glDrawElements( GL_POINTS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+            break;
+    }
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -166,7 +196,53 @@ void paint()
 
     glPopMatrix();
 
-    drawString(5, 25, fps_text.str());
+    std::stringstream fps_text, mode_text, grid_text, gpumem_text, 
+                        memtrans_text, mflops_text;
+    fps_text << "FPS: " << fps << " Frames total: " << frame;
+    mode_text << "Display Mode: ";
+    switch(mode)
+    {
+        case SURFACE_MODE: mode_text << "surface";break;
+        case WIREFRAME_MODE: mode_text << "wireframes";break;
+        case POINT_MODE: mode_text << "points";break;
+    }
+    
+    grid_text << "Gridsize: " << width << "x" << height;
+    if(gpumem >= 10000000)
+    {
+        gpumem_text << "Cuda memory usgae: " << (gpumem)/1000000 << " Mb";
+    }
+    else
+    {
+        gpumem_text << "Cuda memory usgae: " << (gpumem)/1000 << " Kb";
+    }
+    memtrans_text << "Memory transfer: " << int(fps*memtrans) / 1000000 << " Mb/s";
+    
+    long mflops = long(fps * width * height * kernelflops_ * wavesteps_ )/1000000;
+    
+    if(mflops >= 10000)
+    {
+        mflops_text << "Speed: " << mflops/1000 << " GFlop/s";
+    }
+    else
+    {
+        mflops_text << "Speed: " << mflops<< " MFlop/s";
+    }
+    
+    drawString(5, 20, fps_text.str());
+    drawString(5, 40, mode_text.str());
+    drawString(5, 60, grid_text.str());
+    if(frame > 100)
+    {
+        drawString(5, 80, gpumem_text.str());
+        drawString(5, 100, memtrans_text.str());
+        
+        if(mflops)
+        {
+            drawString(5, 140, mflops_text.str());
+        }
+    }
+    
     glutSwapBuffers();
 }
 
@@ -213,6 +289,15 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
     glGenBuffers(1, &indexbufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
+    
+    gpumem += 2*(width+1)*(height+1)*sizeof(gridpoint);//device grids
+    gpumem += width*height*sizeof(vertex);//topography
+    gpumem += width*height*sizeof(vertex);//watersurface
+    gpumem += width*height*sizeof(rgb);//watercolors    
+    gpumem += width*height*sizeof(float);//wave to add
+    
+    memtrans += 2 * width*height*sizeof(vertex);//watersurface
+    memtrans += 2 * width*height*sizeof(rgb);//watercolors
 
     free(indices);
     free(watercolors);
@@ -261,6 +346,14 @@ void keypressed(unsigned char key, int x, int y)
     {
         frame = 0;
         restart();
+    }    
+    if(key == KEY_M)
+    {
+        mode = (mode+1) % (MAXMODE+1);
+    }
+    if(key == KEY_H)
+    {
+        show_landscape = !show_landscape;
     }
     if(key == KEY_A)
     {
@@ -300,6 +393,7 @@ void initGL()
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     glClearColor (0.0, 0.0, 0.0, 1.0);
+    glPointSize(2.0f);
 }
 
 void resize(int width, int height)
