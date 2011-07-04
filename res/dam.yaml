@@ -1,6 +1,6 @@
 # a wavescene
 
 running_time: 40
-landscape_filename: ../res/dam/dam.ppm
+landscape_filename: ../res/shore/ca512.asc
 landscape_color_filename: ../res/dam/texture.ppm 
 wave_filename: ../res/dam/damwave.ppm

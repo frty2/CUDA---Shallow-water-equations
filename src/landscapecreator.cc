@@ -5,6 +5,10 @@
 
 #include "types.h"
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 float vertexheight(rgb color)
 {
     return ((color.x / 255.0f + color.y / 255.0f + color.z / 255.0f) / 1.5f - 1.0f) * 2.0f + 5.0f;;
@@ -74,7 +78,7 @@ void createHeightData(rgb *img, int img_width, int img_height,
     }
 }
 
-void createLandscapeColors(rgb *img, int img_width, int img_height,
+void createLandscapeColors(rgb *img, vertex *vertices, int img_width, int img_height,
                            int width, int height, rgb *& colors)
 {
     colors = (rgb *) malloc(width * height * sizeof(rgb));
@@ -86,7 +90,15 @@ void createLandscapeColors(rgb *img, int img_width, int img_height,
         {
             int imgx = x * (img_width - 1) / (width - 1);
             int imgy = y * (img_height - 1) / (height - 1);
-            colors[y * width + x] = img[imgy * img_width + imgx];
+            rgb color;
+            int heightcolor = max(vertices[y * width + x].y-5.0f,0.0f)*2;
+            color.x = 174 - heightcolor*5;
+            color.y = 177 - heightcolor*10;
+            color.z = 128 - heightcolor*10;
+            colors[y * width + x] = color;
+            
+            
+            //img[imgy * img_width + imgx];
         }
     }
 }

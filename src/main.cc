@@ -153,28 +153,45 @@ int main(int ac, char ** av)
     rgb *wave_img;
     int wave_width;
     int wave_height;
-
-    rgb* landscape_img;
+   
     int heightmapheight;
     int heightmapwidth;
 
 
-    readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);
+    readPPM(wave_filename.c_str(), wave_img, wave_width, wave_height);    
+    
     readPPM(landscape_color_filename.c_str(), colors_img, colors_width, colors_height);
-    readPPM(landscape_filename.c_str(), landscape_img, heightmapwidth, heightmapheight);
-
-    createLandscapeRGB(landscape_img, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+    
+    int landscape_filename_lenght = landscape_filename.length();
+    std::string filetype;
+    
+    if (landscape_filename_lenght > 4)
+        filetype = landscape_filename.substr(landscape_filename_lenght-4,landscape_filename_lenght-1);
+    
+    if (filetype.compare(".asc") == 0 )
+    {
+        float* heightmap;   
+        readASC(landscape_filename.c_str(), heightmapwidth, heightmapheight, heightmap);
+        createLandscapeFloat(heightmap, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+        free(heightmap);        
+    }
+    if (filetype.compare(".ppm") == 0 )
+    {
+        rgb* landscape_img;
+        readPPM(landscape_filename.c_str(), landscape_img, heightmapwidth, heightmapheight);
+        createLandscapeRGB(landscape_img, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+        free(landscape_img);
+    }    
 
     createLandscapeRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
     createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
 
-    createLandscapeColors(colors_img, colors_width, colors_height, gridsize, gridsize, colors);
+    createLandscapeColors(colors_img, landscape, colors_width, colors_height, gridsize, gridsize, colors);
 
     free(colors_img);
     free(wave_img);
-    free(landscape_img);
-
+    
     start();
 
     return 0;

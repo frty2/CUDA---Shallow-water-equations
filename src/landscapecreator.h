@@ -12,5 +12,5 @@ void createLandscapeRGB(rgb *img, int img_width, int img_height,
 void createHeightData(rgb *img, int img_width, int img_height,
                       int width, int height, float *& heights);
 
-void createLandscapeColors(rgb *img, int img_width, int img_height,
+void createLandscapeColors(rgb *img, vertex *vertices, int img_width, int img_height,
                            int width, int height, rgb *& colors);
