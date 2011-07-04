@@ -40,6 +40,14 @@
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
+const int SURFACE_MODE = 0;
+const int WIREFRAME_MODE = 1;
+const int POINT_MODE = 2;
+
+const int MAXMODE = 2;
+
+int mode = SURFACE_MODE;
+
 static bool validateMaxFPS(const char* flagname, int value)
 {
     if (value > 0)
@@ -49,9 +57,44 @@ static bool validateMaxFPS(const char* flagname, int value)
     return false;
 }
 
+static bool validateMode(const char* flagname, int value)
+{
+    if (value >= 0 && value <= MAXMODE)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+static bool validateAngle(const char* flagname, double value)
+{
+    if (value >= 0 && value <= 360)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+static bool validateZoom(const char* flagname, double value)
+{
+    if (value >= 5 && value <= 50)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+DEFINE_double(rotx, 45, "rotation x-axis");
+DEFINE_double(roty, 0, "rotation y-axis");
+DEFINE_double(zoom, 30, "distance from scene");
 DEFINE_int32(maxfps, 30, "maximum frames per second.");
+DEFINE_int32(mode, SURFACE_MODE, "display mode: surface = 0, wireframe = 1, points = 2");
 
 static const bool maxfps_dummy = google::RegisterFlagValidator(&FLAGS_maxfps, &validateMaxFPS);
+static const bool mode_dummy = google::RegisterFlagValidator(&FLAGS_mode, &validateMode);
+static const bool rotx_dummy = google::RegisterFlagValidator(&FLAGS_rotx, &validateAngle);
+static const bool roty_dummy = google::RegisterFlagValidator(&FLAGS_roty, &validateAngle);
+static const bool zoom_dummy = google::RegisterFlagValidator(&FLAGS_zoom, &validateZoom);
 
 GLuint heightmap[2];
 GLuint watersurface[2];
@@ -78,13 +121,6 @@ float rotationY = 0;
 float rotationX = 45;
 float zoom = 30;
 
-const int SURFACE_MODE = 0;
-const int WIREFRAME_MODE = 1;
-const int POINT_MODE = 2;
-
-const int MAXMODE = 2;
-
-int mode = SURFACE_MODE;
 bool show_landscape = true;
 
 int wavesteps_, kernelflops_;
@@ -228,7 +264,6 @@ void paint()
     {
         mflops_text << "Speed: " << mflops<< " MFlop/s";
     }
-    
     drawString(5, 20, fps_text.str());
     drawString(5, 40, mode_text.str());
     drawString(5, 60, grid_text.str());
@@ -242,7 +277,6 @@ void paint()
             drawString(5, 140, mflops_text.str());
         }
     }
-    
     glutSwapBuffers();
 }
 
@@ -250,8 +284,7 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
 {
     width = grid_width;
     height = grid_height;
-
-
+    
     //Calc the indices for the QUADS
     int *indices = (int *) malloc(4 * (width - 1) * (height - 1) * sizeof(int));
     CHECK_NOTNULL(indices);
@@ -357,11 +390,11 @@ void keypressed(unsigned char key, int x, int y)
     }
     if(key == KEY_A)
     {
-        rotationY += 1;
+        rotationY = ++rotationY > 360 ? 0 : rotationY;
     }
     if(key == KEY_D)
     {
-        rotationY -= 1;
+        rotationY = --rotationY < 0 ? 360 : rotationY;
     }
     if(key == KEY_W)
     {
@@ -373,16 +406,20 @@ void keypressed(unsigned char key, int x, int y)
     }
     if(key == KEY_R)
     {
-        rotationX = ++rotationX > 90 ? 90 : rotationX;
+        rotationX = ++rotationX > 360 ? 0 : rotationX;
     }
     if(key == KEY_F)
     {
-        rotationX = --rotationX < -45 ? -45 : rotationX;
+        rotationX = --rotationX < 0 ? 360 : rotationX;
     }
 }
 
 void initGL()
 {
+    mode = FLAGS_mode;
+    rotationX = FLAGS_rotx;
+    rotationY = FLAGS_roty;
+    zoom = FLAGS_zoom;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0, window_width, window_height);

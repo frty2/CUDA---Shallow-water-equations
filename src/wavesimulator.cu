@@ -22,31 +22,18 @@
 #define grid2Dwrite(array, x, y, pitch, value) array[(y)*pitch+x] = value
 #define grid2Dread(array, x, y, pitch) array[(y)*pitch+x]
 
-static bool validateTimestep(const char* flagname, double value)
-{
-    if (value > 0 && value < 1.0f)
-        { return true; }
-    std::cout << "Invalid value for --" << flagname << ": "
-              << value << std::endl;
-    return false;
-}
-
-DEFINE_double(timestep, 0.01f, "timestep between 2 wavesteps.");
-
-static const bool timestep_dummy = google::RegisterFlagValidator(&FLAGS_timestep, &validateTimestep);
-
-
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
 
 int state = UNINTIALISED;
 
-float timestep;
 int stepsperframe = 50;
 
 const float GRAVITY = 9.83219f * 0.5f; //0.5f * Fallbeschleunigung
 
 const float NN = 5.0f;
+
+const float timestep = 0.01f;
 
 texture<gridpoint, 2, cudaReadModeElementType> texture_grid;
 texture<vertex, 2, cudaReadModeElementType> texture_landscape;
@@ -67,7 +54,7 @@ rgb* device_watersurfacecolors;
 
 __host__ __device__ gridpoint F(gridpoint gp)
 {
-    float h = gp.x;
+    float h = max(gp.x, 0.0f);
     float uh = gp.y;
     float vh = gp.z;
 
@@ -84,7 +71,7 @@ __host__ __device__ gridpoint F(gridpoint gp)
 
 __host__ __device__ gridpoint G(gridpoint gp)
 {
-    float h = gp.x;
+    float h = max(gp.x, 0.0f);
     float uh = gp.y;
     float vh = gp.z;
 
@@ -101,7 +88,7 @@ __host__ __device__ gridpoint G(gridpoint gp)
 
 __host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint s, gridpoint w)
 {
-    float h = c.x;
+    float h = max(c.x, 0.0f);
 
     gridpoint H;
     H.x = 0;
@@ -198,8 +185,7 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
         gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
         gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
         gridpoint u_east = 0.5f * ( east + center ) - timestep * ( F(east) - F(center) );
-
-
+        
         gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
         u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
@@ -275,9 +261,9 @@ __global__ void addWave(gridpoint* grid, float* wave, float norm, int width, int
         int gridy = y + 1;
 
         float waveheight = grid2Dread(grid, gridx, gridy, pitch).x;
-
-        waveheight += (grid2Dread(wave, x, y, width) - 5.0f) / norm;
-
+        
+        float toadd = max(grid2Dread(wave, x, y, width)-0.2,0)*norm;
+        waveheight += toadd;
         grid[ gridx + gridy * pitch ].x = waveheight;
 
     }
@@ -318,7 +304,6 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     {
         return;
     }
-    timestep = FLAGS_timestep;
     int gridwidth = width + 2;
     int gridheight = height + 2;
 
@@ -405,7 +390,7 @@ void initWaterSurface(int width, int height, vertex *heightmapvertices, float *w
     CHECK_EQ(cudaSuccess, error) << "Error at line " << __LINE__ << ": " << cudaGetErrorString(error);
 
     //add the initial wave to the grid
-    addWave(wave, 0.5f, width, height, grid_pitch_elements);
+    addWave(wave, 5.0f, width, height, grid_pitch_elements);
 
     state = INITIALISED;
 }

@@ -179,13 +179,13 @@ int main(int ac, char ** av)
     {
         rgb* landscape_img;
         readPPM(landscape_filename.c_str(), landscape_img, heightmapwidth, heightmapheight);
-        createLandscapeRGB(landscape_img, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
+        createLandscapeFromRGB(landscape_img, heightmapwidth, heightmapheight, gridsize, gridsize, landscape);
         free(landscape_img);
     }    
 
-    createLandscapeRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
+    createLandscapeFromRGB(wave_img, wave_width, wave_height, gridsize, gridsize, wave);
 
-    createHeightData(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
+    createWaveHeights(wave_img, wave_width, wave_height, gridsize, gridsize, waveheights);
 
     createLandscapeColors(colors_img, landscape, colors_width, colors_height, gridsize, gridsize, colors);
 
