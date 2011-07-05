@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include "types.h"
@@ -20,6 +21,19 @@
 
 #define grid2Dread(array, x, y, pitch) array[(y)*pitch+x]
 
+static bool validateNorm(const char* flagname, int value)
+{
+    if (value >= 1)
+        { return true; }
+    std::cout << "Invalid value for --" << flagname << ": "
+              << value << std::endl;
+    return false;
+}
+
+DEFINE_int32(norm, 1, "norm factor for height data, see README file");
+
+static const bool norm_dummy = google::RegisterFlagValidator(&FLAGS_norm, &validateNorm);
+
 void writeASC(const char* filename, int &heightmapdim, int &fitdim, float*& heightmap)
 {
     std::ofstream file(filename);
@@ -32,7 +46,7 @@ void writeASC(const char* filename, int &heightmapdim, int &fitdim, float*& heig
 
 
     int step = max((heightmapdim - 1) / (fitdim - 1), 1);
-
+    int norm = FLAGS_norm;
     for(int y = 0; y < fitdim; y++)
     {
         for(int x = 0; x < fitdim; x++)
@@ -49,7 +63,7 @@ void writeASC(const char* filename, int &heightmapdim, int &fitdim, float*& heig
                 }
             }
             height = height / (step * step);
-            file << height << " ";
+            file << height*norm << " ";
         }
     }
     file.close();

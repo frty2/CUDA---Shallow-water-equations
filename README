@@ -1,0 +1,51 @@
+- Requirements:
+
+    * CMake (http://www.cmake.org/)
+    * Google logging library (http://code.google.com/p/google-glog/)
+    * Google flags library (http://code.google.com/p/google-gflags/)
+    * YAML c++ parser library (http://code.google.com/p/yaml-cpp/)
+    * Nvidia CUDA (http://www.nvidia.com/)
+    * OpenGL (http://www.opengl.org/)
+    * GLUT (http://www.opengl.org/resources/libraries/glut/)
+    
+    * CUDA capable graphic device
+
+- Installation:
+
+You should make sure that cmake and the required libraries are installed on your system. If you are in the 'bin' directory of the project, the compiling the project should be done this way:
+
+cmake .. && make
+
+- Usage:
+
+The program requires a scene file to work. This scene file contains a description of the scene in the yaml format. Just have a look at the demo files to see how to describe the scene. All relative paths in the scene file are interpreted relative to the working directory.
+
+In the interactive OpenGL mode you can navigate through the scene using a keyboard. With the keys 'w' and 's' you can zoom in and out. The keys 'a' and 'd' will rotate the scene at the y-axis. The keys 'r' and 'f' rotate the scene at the x-axis. The key 'm' is used to switch through the differenet display modes and with the 'h' key you can hide or show the landscape. With the 'x' key you can restart the simulation and with ESC you can exit the program.
+
+There are many optional parameters to pass to the programm:
+
+    -maxfps (maximum frames per second.) type: int32 default: 30
+    -mode (display mode: surface = 0, wireframe = 1, points = 2) type: int32
+      default: 0
+    -rotx (rotation x-axis) type: double default: 45
+    -roty (rotation y-axis) type: double default: 0
+    -zoom (distance from scene) type: double default: 30
+    -gridsize (resolution of the water wave.) type: int32 default: 256
+    -kernelflops (Flops per kernel) type: int32 default: 0
+    -simulate (execution steps, without graphic output. (0 = with graphic
+      output)) type: int32 default: 0
+    -wspf (wavesteps per frame.) type: int32 default: 50
+    
+- Input files:
+
+There are 3 different types of files as ressources for the programm. First one is the scene format, which is a markup based format describing a scene. Just have a look at the demo scenes to see the simple structure of the format. The purpose for the scene file is to hold links to other ressource file describing the landscape (in asc/ppm format), the waterwave (ppm) and the landscape texture (ppm).
+
+The asc file format (http://www.ngdc.noaa.gov/mgg/dem/demportal.html) is a ascii file describing the landscape heights for each point of a grid as a float value. The files you can download from (http://www.ngdc.noaa.gov/mgg/inundation/tsunami/inundation.html) are typical very large and should be reduced in size to improve program init speed. You can find a resizing tool in our project to convert the files. You should have a look at the files, because the scaling of the float values are varying in amplitude. Amplitude should be soom large numbers (in range -10000.0 to 10.000). We have seen files with aplituted in range -10 to 10. This files should be normalized using the asc converter in this project.
+
+The (ascii-)ppm files for the underground and the wave are the source for the landscape and initial wave height at the specific point in the scene. The mean of the red, green, and blue values are noramlized to add a wave on top of the normal water height. A black color is interpreted as 0 water height, white is the maximum water height. Since the method for intepreting the height values for landscape and water are identical you should be sure, that the water amplitudes are fitting to the landscape amplitudes.
+
+- ASC Converter:
+
+The asc converter is a tool to resize and normlize large asc files to fit to our program.
+
+You can start the asc converter from the bin directory. It takes 2 paramter: First one is the file is the source, 2nd the target. You can specify the size of the target grid using the optional "-gridsize" parameter (default is 512). With the "-norm" (default is 1) you can scale up the amplitudes of the landscape.

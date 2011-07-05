@@ -1,6 +1,0 @@
-# a wavescene
-
-running_time: 40
-landscape_filename: ../res/ca/ca512.asc
-landscape_color_filename: ../res/ca/texture.ppm 
-wave_filename: ../res/ca/wave.ppm

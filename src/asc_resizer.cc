@@ -6,7 +6,7 @@
 #include "asc_reader.h"
 #include "asc_writer.h"
 
-static bool validateFitsize(const char* flagname, int value)
+static bool validateGridsize(const char* flagname, int value)
 {
     if (value >= 0)
         { return true; }
@@ -15,9 +15,9 @@ static bool validateFitsize(const char* flagname, int value)
     return false;
 }
 
-DEFINE_int32(fitsize, 512, "size for new file.");
+DEFINE_int32(gridsize, 512, "gridsize for new file.");
 
-static const bool fitsize = google::RegisterFlagValidator(&FLAGS_fitsize, &validateFitsize);
+static const bool gridsize_dummy = google::RegisterFlagValidator(&FLAGS_gridsize, &validateGridsize);
 
 int main(int argc, char ** argv)
 {
@@ -41,8 +41,8 @@ int main(int argc, char ** argv)
     int heightmapwidth;
     readASC(argv[1], heightmapwidth, heightmapheight, landscapeheightmap);
 
-    int fitsize = FLAGS_fitsize;
-    writeASC(argv[2], heightmapwidth, fitsize, landscapeheightmap);
+    int gridsize = FLAGS_gridsize;
+    writeASC(argv[2], heightmapwidth, gridsize, landscapeheightmap);
 
 
     return 0;

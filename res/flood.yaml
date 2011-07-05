@@ -1,0 +1,6 @@
+# a wavescene
+
+running_time: 40
+landscape_filename: ../res/flood/flood.ppm
+landscape_color_filename: ../res/flood/texture.ppm 
+wave_filename: ../res/flood/wave.ppm
