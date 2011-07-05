@@ -137,13 +137,13 @@ void createWindow(int argc, char **argv, int w_width, int w_height,
                   int grid_width, int grid_height, vertex *landscape, vertex *wave, rgb *colors,
                   void (*updatefunction) (vertex*, rgb*),
                   void (*restartfunction) (),
-                  void (*shutdownfunction) (), 
+                  void (*shutdownfunction) (),
                   int ws, int kf)
 {
     update = updatefunction;
     restart = restartfunction;
     shutdown = shutdownfunction;
-    
+
     wavesteps_ = ws;
     kernelflops_ = kf;
 
@@ -168,7 +168,7 @@ void paint()
     frame++;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     glMatrixMode(GL_MODELVIEW);
 
     glPushMatrix();
@@ -210,20 +210,20 @@ void paint()
     //watersurface
     switch(mode)
     {
-        case SURFACE_MODE:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
-            glDisable(GL_BLEND);
-            break;
-        case WIREFRAME_MODE:
-            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-            glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
-            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-            break;
-        case POINT_MODE:
-            glDrawElements( GL_POINTS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
-            break;
+    case SURFACE_MODE:
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+        glDisable(GL_BLEND);
+        break;
+    case WIREFRAME_MODE:
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        glDrawElements( GL_QUADS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        break;
+    case POINT_MODE:
+        glDrawElements( GL_POINTS, 4 * (width - 1) * (height - 1), GL_UNSIGNED_INT, 0 );
+        break;
     }
 
     glDisableClientState(GL_COLOR_ARRAY);
@@ -232,37 +232,43 @@ void paint()
 
     glPopMatrix();
 
-    std::stringstream fps_text, mode_text, grid_text, gpumem_text, 
-                        memtrans_text, mflops_text;
+    std::stringstream fps_text, mode_text, grid_text, gpumem_text,
+        memtrans_text, mflops_text;
     fps_text << "FPS: " << fps << " Frames total: " << frame;
     mode_text << "Display Mode: ";
     switch(mode)
     {
-        case SURFACE_MODE: mode_text << "surface";break;
-        case WIREFRAME_MODE: mode_text << "wireframes";break;
-        case POINT_MODE: mode_text << "points";break;
+    case SURFACE_MODE:
+        mode_text << "surface";
+        break;
+    case WIREFRAME_MODE:
+        mode_text << "wireframes";
+        break;
+    case POINT_MODE:
+        mode_text << "points";
+        break;
     }
-    
+
     grid_text << "Gridsize: " << width << "x" << height;
     if(gpumem >= 10000000)
     {
-        gpumem_text << "Cuda memory usgae: " << (gpumem)/1000000 << " Mb";
+        gpumem_text << "Cuda memory usgae: " << (gpumem) / 1000000 << " Mb";
     }
     else
     {
-        gpumem_text << "Cuda memory usgae: " << (gpumem)/1000 << " Kb";
+        gpumem_text << "Cuda memory usgae: " << (gpumem) / 1000 << " Kb";
     }
-    memtrans_text << "Memory transfer: " << int(fps*memtrans) / 1000000 << " Mb/s";
-    
-    long mflops = long(fps * width * height * kernelflops_ * wavesteps_ )/1000000;
-    
+    memtrans_text << "Memory transfer: " << int(fps * memtrans) / 1000000 << " Mb/s";
+
+    long mflops = long(fps * width * height * kernelflops_ * wavesteps_ ) / 1000000;
+
     if(mflops >= 10000)
     {
-        mflops_text << "Speed: " << mflops/1000 << " GFlop/s";
+        mflops_text << "Speed: " << mflops / 1000 << " GFlop/s";
     }
     else
     {
-        mflops_text << "Speed: " << mflops<< " MFlop/s";
+        mflops_text << "Speed: " << mflops << " MFlop/s";
     }
     drawString(5, 20, fps_text.str());
     drawString(5, 40, mode_text.str());
@@ -271,7 +277,7 @@ void paint()
     {
         drawString(5, 80, gpumem_text.str());
         drawString(5, 100, memtrans_text.str());
-        
+
         if(mflops)
         {
             drawString(5, 140, mflops_text.str());
@@ -284,7 +290,7 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
 {
     width = grid_width;
     height = grid_height;
-    
+
     //Calc the indices for the QUADS
     int *indices = (int *) malloc(4 * (width - 1) * (height - 1) * sizeof(int));
     CHECK_NOTNULL(indices);
@@ -322,15 +328,15 @@ void initScene(vertex *landscape, vertex *wave, rgb *colors, int grid_width, int
     glGenBuffers(1, &indexbufferID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbufferID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * (width - 1) * (height - 1)*sizeof(int), indices, GL_STATIC_DRAW);
-    
-    gpumem += 2*(width+1)*(height+1)*sizeof(gridpoint);//device grids
-    gpumem += width*height*sizeof(vertex);//topography
-    gpumem += width*height*sizeof(vertex);//watersurface
-    gpumem += width*height*sizeof(rgb);//watercolors    
-    gpumem += width*height*sizeof(float);//wave to add
-    
-    memtrans += 2 * width*height*sizeof(vertex);//watersurface
-    memtrans += 2 * width*height*sizeof(rgb);//watercolors
+
+    gpumem += 2 * (width + 1) * (height + 1) * sizeof(gridpoint); //device grids
+    gpumem += width * height * sizeof(vertex); //topography
+    gpumem += width * height * sizeof(vertex); //watersurface
+    gpumem += width * height * sizeof(rgb); //watercolors
+    gpumem += width * height * sizeof(float); //wave to add
+
+    memtrans += 2 * width * height * sizeof(vertex); //watersurface
+    memtrans += 2 * width * height * sizeof(rgb); //watercolors
 
     free(indices);
     free(watercolors);
@@ -379,10 +385,10 @@ void keypressed(unsigned char key, int x, int y)
     {
         frame = 0;
         restart();
-    }    
+    }
     if(key == KEY_M)
     {
-        mode = (mode+1) % (MAXMODE+1);
+        mode = (mode + 1) % (MAXMODE + 1);
     }
     if(key == KEY_H)
     {

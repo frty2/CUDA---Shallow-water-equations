@@ -45,7 +45,7 @@ void createLandscapeFloat(float *heightmap, int heightmap_width, int heightmap_h
 }
 
 void createLandscapeFromRGB(rgb *img, int img_width, int img_height,
-                        int width, int height, vertex *& vertices)
+                            int width, int height, vertex *& vertices)
 {
     vertices = (vertex *) malloc(width * height * sizeof(vertex));
     CHECK_NOTNULL(vertices);
@@ -66,7 +66,7 @@ void createLandscapeFromRGB(rgb *img, int img_width, int img_height,
 }
 
 void createWaveHeights(rgb *img, int img_width, int img_height,
-                      int width, int height, float *& heights)
+                       int width, int height, float *& heights)
 {
     heights = (float *) malloc(width * height * sizeof(float));
     CHECK_NOTNULL(heights);
@@ -77,7 +77,7 @@ void createWaveHeights(rgb *img, int img_width, int img_height,
         {
             int imgx = x * (img_width - 1) / (width - 1);
             int imgy = y * (img_height - 1) / (height - 1);
-            heights[y * width + x] = (vertexheight(img[imgy * img_width + imgx])-3.0f)/5.0f;
+            heights[y * width + x] = (vertexheight(img[imgy * img_width + imgx]) - 3.0f) / 5.0f;
         }
     }
 }
@@ -95,10 +95,10 @@ void createLandscapeColors(rgb *img, vertex *vertices, int img_width, int img_he
             int imgx = x * (img_width - 1) / (width - 1);
             int imgy = y * (img_height - 1) / (height - 1);
             rgb color;
-            int heightcolor = (vertices[y * width + x].y-5)*20.0f;
-            color.x = max(min(-heightcolor+img[imgy * img_width + imgx].x, 255), 0);
-            color.y = max(min(-heightcolor+img[imgy * img_width + imgx].y, 255), 0);
-            color.z = max(min(-heightcolor+img[imgy * img_width + imgx].z, 255), 0);
+            int heightcolor = (vertices[y * width + x].y - 5) * 20.0f;
+            color.x = max(min(-heightcolor + img[imgy * img_width + imgx].x, 255), 0);
+            color.y = max(min(-heightcolor + img[imgy * img_width + imgx].y, 255), 0);
+            color.z = max(min(-heightcolor + img[imgy * img_width + imgx].z, 255), 0);
             colors[y * width + x] = color;
         }
     }

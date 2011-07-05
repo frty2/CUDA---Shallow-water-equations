@@ -22,6 +22,8 @@
 #define grid2Dwrite(array, x, y, pitch, value) array[(y)*pitch+x] = value
 #define grid2Dread(array, x, y, pitch) array[(y)*pitch+x]
 
+
+
 const int UNINTIALISED = 0;
 const int INITIALISED = 1;
 
@@ -59,13 +61,13 @@ __host__ __device__ gridpoint F(gridpoint gp)
     float vh = gp.z;
 
     float h4 = h * h * h * h;
-    float u = sqrtf(2) * h * uh / (sqrtf(h4 + max(h4, EPSILON)));
+    float u = sqrtf(2.0f) * h * uh / (sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint F;
     F.x = u * h;
     F.y = uh * u + GRAVITY * h * h;
     F.z = vh * u;
-    F.w = 0;
+    F.w = 0.0f;
     return F;
 }
 
@@ -82,7 +84,7 @@ __host__ __device__ gridpoint G(gridpoint gp)
     G.x = v * h;
     G.y = uh * v;
     G.z = vh * v + GRAVITY * h * h;
-    G.w = 0;
+    G.w = 0.0f;
     return G;
 }
 
@@ -91,10 +93,10 @@ __host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint
     float h = max(c.x, 0.0f);
 
     gridpoint H;
-    H.x = 0;
+    H.x = 0.0f;
     H.y = -GRAVITY * h * (e.w - w.w);
     H.z = -GRAVITY * h * (s.w - n.w);
-    H.w = 0;
+    H.w = 0.0f;
     return H;
 }
 
@@ -145,14 +147,14 @@ __host__ __device__ void fixShore(gridpoint& l, gridpoint& c, gridpoint& r)
     if(r.x < 0.0f || l.x < 0.0f || c.x < 0.0f)
     {
         c.x = c.x + l.x + r.x;
-        c.x = max(0, c.x);
+        c.x = max(0.0f, c.x);
         l.x = 0.0f;
         r.x = 0.0f;
     }
     float h = c.x;
     float h4 = h * h * h * h;
-    float v = sqrtf(2) * h * c.y / (sqrtf(h4 + max(h4, EPSILON)));
-    float u = sqrtf(2) * h * c.z / (sqrtf(h4 + max(h4, EPSILON)));
+    float v = sqrtf(2.0f) * h * c.y / (sqrtf(h4 + max(h4, EPSILON)));
+    float u = sqrtf(2.0f) * h * c.z / (sqrtf(h4 + max(h4, EPSILON)));
 
     c.y = u * h;
     c.z = v * h;
@@ -185,7 +187,7 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
         gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
         gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
         gridpoint u_east = 0.5f * ( east + center ) - timestep * ( F(east) - F(center) );
-        
+
         gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
         u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
@@ -261,8 +263,8 @@ __global__ void addWave(gridpoint* grid, float* wave, float norm, int width, int
         int gridy = y + 1;
 
         float waveheight = grid2Dread(grid, gridx, gridy, pitch).x;
-        
-        float toadd = max(grid2Dread(wave, x, y, width)-0.2,0)*norm;
+
+        float toadd = max(grid2Dread(wave, x, y, width) - 0.2f, 0.0f) * norm;
         waveheight += toadd;
         grid[ gridx + gridy * pitch ].x = waveheight;
 
