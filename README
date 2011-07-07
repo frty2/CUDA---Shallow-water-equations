@@ -12,7 +12,7 @@
 
 - Installation:
 
-You should make sure that cmake and the required libraries are installed on your system. If you are in the 'bin' directory of the project, the compiling the project should be done this way:
+You should make sure that cmake and the required libraries are installed on your system. If you are in the 'bin' directory of the project, compiling the project should be done this way:
 
 cmake .. && make
 
@@ -20,7 +20,9 @@ cmake .. && make
 
 The program requires a scene file to work. This scene file contains a description of the scene in the yaml format. Just have a look at the demo files to see how to describe the scene. All relative paths in the scene file are interpreted relative to the working directory.
 
-In the interactive OpenGL mode you can navigate through the scene using a keyboard. With the keys 'w' and 's' you can zoom in and out. The keys 'a' and 'd' will rotate the scene at the y-axis. The keys 'r' and 'f' rotate the scene at the x-axis. The key 'm' is used to switch through the differenet display modes and with the 'h' key you can hide or show the landscape. With the 'x' key you can restart the simulation and with ESC you can exit the program.
+In the interactive OpenGL mode you can navigate through the scene using a keyboard. With the keys 'w' and 's' you can zoom in and out. The keys 'a' and 'd' will rotate the scene at the y-axis. The keys 'r' and 'f' rotate the scene at the x-axis. The key 'm' is used to switch through the different display modes and with the 'h' key you can hide or show the landscape. With the 'x' key you can restart the simulation and with ESC you can exit the program.
+
+For performance measurement of the program you should start the program in simulate mode. In this mode there is no graphical output via opengl. To start the mode you have to pass the paramter '-simulate x' where x is the number of steps you want to simulate. In each step the wave are computed 'wavesteps per frame' times.
 
 There are many optional parameters to pass to the programm:
 
@@ -40,12 +42,21 @@ There are many optional parameters to pass to the programm:
 
 There are 3 different types of files as ressources for the programm. First one is the scene format, which is a markup based format describing a scene. Just have a look at the demo scenes to see the simple structure of the format. The purpose for the scene file is to hold links to other ressource file describing the landscape (in asc/ppm format), the waterwave (ppm) and the landscape texture (ppm).
 
-The asc file format (http://www.ngdc.noaa.gov/mgg/dem/demportal.html) is a ascii file describing the landscape heights for each point of a grid as a float value. The files you can download from (http://www.ngdc.noaa.gov/mgg/inundation/tsunami/inundation.html) are typical very large and should be reduced in size to improve program init speed. You can find a resizing tool in our project to convert the files. You should have a look at the files, because the scaling of the float values are varying in amplitude. Amplitude should be soom large numbers (in range -10000.0 to 10.000). We have seen files with aplituted in range -10 to 10. This files should be normalized using the asc converter in this project.
+The asc file format (http://www.ngdc.noaa.gov/mgg/dem/demportal.html) is a ascii file describing the landscape heights for each point of a grid as a float value. The files you can download from (http://www.ngdc.noaa.gov/mgg/inundation/tsunami/inundation.html) are typical very large and should be reduced in size to improve program init speed. You can find a resizing tool in our project to convert the files. You should have a look at the files, because the scaling of the float values are varying in amplitude. Amplitude should be some large numbers (in range -10000.0 to 10.000). We have seen files with aplitudes in range -10 to 10. This files should be normalized using the asc converter in this project.
 
-The (ascii-)ppm files for the underground and the wave are the source for the landscape and initial wave height at the specific point in the scene. The mean of the red, green, and blue values are noramlized to add a wave on top of the normal water height. A black color is interpreted as 0 water height, white is the maximum water height. Since the method for intepreting the height values for landscape and water are identical you should be sure, that the water amplitudes are fitting to the landscape amplitudes.
+The (ascii-)ppm files for the underground and the wave are the source for the landscape and initial wave height at the specific point in the scene. The mean of the red, green, and blue values are noramlized to add a wave on top of the normal water height. A black color is interpreted as 0 water height, white is the maximum water height. Since the method for intepreting the height values for landscape and water are identical you should be sure, that the water amplitudes are fitting to the landscape amplitudes. Normal water height is defined by color [r:127 g:127 b:127].
 
 - ASC Converter:
 
 The asc converter is a tool to resize and normlize large asc files to fit to our program.
 
-You can start the asc converter from the bin directory. It takes 2 paramter: First one is the file is the source, 2nd the target. You can specify the size of the target grid using the optional "-gridsize" parameter (default is 512). With the "-norm" (default is 1) you can scale up the amplitudes of the landscape.
+You can start the asc converter from the 'bin' directory. It takes 2 parameters: First one is the file is the source, 2nd the target. You can specify the size of the target grid using the optional "-gridsize" parameter (default is 512). With the "-norm" (default is 1) you can scale up the amplitudes of the landscape.
+
+
+- Performance measurement:
+
+For performance measurement you have to pass the parameter 'kernelflops' to the program, which describes how many flops a single thread do in one execution. This value may variying for each compilation unit. In our tests we have measured 256 flops / thread. We have used a simple shell script to track the flops a thread executes. You have to add the parameter "-keep" to the cmake file to ensure the ptx assembler code remains on your harddrive after compiling. The you cat use somthing like:
+
+cat wavesimulator.ptx | awk '/.LDWbegin(.){1,10}simulateWaveStep/,/LDWend(.){1,10}simulateWaveStep/' | ad.f32\|mad.rnd.f32\|div.full.f32\|div.approx.f32\|div.rnd.f32\|abs.f32\|neg.f32\|min.f32\|max.f32\|rcp.f32\|rcp.approx.f32\|rcp.rnd.f32\|sqrt.f32\|sqrt.approx.f32\|sqrt.rnd.f32\|rsqrt.approx.f32' | wc -l
+
+This scripts takes the assembler code of the programm, filters the main kernel and the extracting all floating point operations from it. With the 'wc -l' it counts the lines of the result, which should be the number if floating point operations. This number is multiplied by the number of threads, the wave steps per frame and the frames per second to get the floating point operations per second.  

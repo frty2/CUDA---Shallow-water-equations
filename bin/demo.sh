@@ -9,4 +9,4 @@
 ./swegpu ../res/dam.yaml -kernelflops 256
 ./swegpu ../res/dam.yaml -wspf 20 -mode 1 -rotx 25 -zoom 13 -roty 245 -kernelflops 256
 ./swegpu ../res/dam.yaml -wspf 20 -mode 2 -rotx 11 -zoom 14 -roty 105 -kernelflops 256
-./swegpu ../res/dam.yaml -simulate 1 -wspf 10000 -gridsize 768 -kernelflops 256
+./swegpu ../res/dam.yaml -simulate 1 -wspf 2000 -gridsize 768 -kernelflops 256
