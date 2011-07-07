@@ -18,6 +18,10 @@ cmake .. && make
 
 - Usage:
 
+If you are in the 'bin' folder you can start the program this way:
+
+./swegpu ../res/dam.yaml
+
 The program requires a scene file to work. This scene file contains a description of the scene in the yaml format. Just have a look at the demo files to see how to describe the scene. All relative paths in the scene file are interpreted relative to the working directory.
 
 In the interactive OpenGL mode you can navigate through the scene using a keyboard. With the keys 'w' and 's' you can zoom in and out. The keys 'a' and 'd' will rotate the scene at the y-axis. The keys 'r' and 'f' rotate the scene at the x-axis. The key 'm' is used to switch through the different display modes and with the 'h' key you can hide or show the landscape. With the 'x' key you can restart the simulation and with ESC you can exit the program.
