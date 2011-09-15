@@ -207,6 +207,8 @@ void paint()
     glBindBuffer(GL_ARRAY_BUFFER, watersurface[0]);
     glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
 
+    glTranslatef(0.0f, -0.12f, 0.0f);
+    
     //watersurface
     switch(mode)
     {

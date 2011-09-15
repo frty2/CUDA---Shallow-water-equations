@@ -54,7 +54,7 @@ rgb* device_watersurfacecolors;
 
 #define EPSILON 0.0001f
 
-__host__ __device__ gridpoint F(gridpoint gp)
+__host__ __device__ gridpoint HorizontalPotential(gridpoint gp)
 {
     float h = max(gp.x, 0.0f);
     float uh = gp.y;
@@ -71,14 +71,14 @@ __host__ __device__ gridpoint F(gridpoint gp)
     return F;
 }
 
-__host__ __device__ gridpoint G(gridpoint gp)
+__host__ __device__ gridpoint VerticalPotential(gridpoint gp)
 {
     float h = max(gp.x, 0.0f);
     float uh = gp.y;
     float vh = gp.z;
 
     float h4 = h * h * h * h;
-    float v = sqrtf(2) * h * vh / (sqrtf(h4 + max(h4, EPSILON)));
+    float v = sqrtf(2.0f) * h * vh / (sqrtf(h4 + max(h4, EPSILON)));
 
     gridpoint G;
     G.x = v * h;
@@ -88,7 +88,7 @@ __host__ __device__ gridpoint G(gridpoint gp)
     return G;
 }
 
-__host__ __device__ gridpoint H(gridpoint c, gridpoint n, gridpoint e, gridpoint s, gridpoint w)
+__host__ __device__ gridpoint SlopeForce(gridpoint c, gridpoint n, gridpoint e, gridpoint s, gridpoint w)
 {
     float h = max(c.x, 0.0f);
 
@@ -183,12 +183,12 @@ __global__ void simulateWaveStep(gridpoint* grid_next, int width, int height, fl
         fixShore(west, center, east);
         fixShore(north, center, south);
 
-        gridpoint u_south = 0.5f * ( south + center ) - timestep * ( G(south) - G(center) );
-        gridpoint u_north = 0.5f * ( north + center ) - timestep * ( G(center) - G(north) );
-        gridpoint u_west = 0.5f * ( west + center ) - timestep * ( F(center) - F(west) );
-        gridpoint u_east = 0.5f * ( east + center ) - timestep * ( F(east) - F(center) );
+        gridpoint u_south = 0.5f * ( south + center ) - timestep * ( VerticalPotential(south) - VerticalPotential(center) );
+        gridpoint u_north = 0.5f * ( north + center ) - timestep * ( VerticalPotential(center) - VerticalPotential(north) );
+        gridpoint u_west = 0.5f * ( west + center ) - timestep * ( HorizontalPotential(center) - HorizontalPotential(west) );
+        gridpoint u_east = 0.5f * ( east + center ) - timestep * ( HorizontalPotential(east) - HorizontalPotential(center) );
 
-        gridpoint u_center = center + timestep * H(center, north, east, south, west) - timestep * ( F(u_east) - F(u_west) ) - timestep * ( G(u_south) - G(u_north) );
+        gridpoint u_center = center + timestep * SlopeForce(center, north, east, south, west) - timestep * ( HorizontalPotential(u_east) - HorizontalPotential(u_west) ) - timestep * ( VerticalPotential(u_south) - VerticalPotential(u_north) );
         u_center.x = max(0.0f, u_center.x);
         grid2Dwrite(grid_next, gridx, gridy, pitch, u_center);
     }
@@ -214,8 +214,6 @@ __global__ void initGrid(gridpoint *grid, int gridwidth, int gridheight, int pit
 __host__ __device__ vertex gridpointToVertex(gridpoint gp, float x, float y)
 {
     float h = gp.x;
-    if(h < 0.1f)
-        { h = -0.001f; }
     vertex v;
     v.x = x * 20.0f - 10.0f;
     v.z = y * 20.0f - 10.0f;
